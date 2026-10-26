@@ -1,270 +1,306 @@
 <template>
-  <div>
-    <div class="mb-8">
-      <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">
-        Settings
-      </h1>
-      <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-        Manage your account, webhooks, and integrations
-      </p>
+  <div class="space-y-6 max-w-4xl">
+    <!-- Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl bg-primary-500/10 dark:bg-primary-500/20 text-primary-500 flex items-center justify-center shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Settings & Integrations
+          </h1>
+          <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
+            Manage your account preferences, security, webhooks, and developer tools
+          </p>
+        </div>
+      </div>
     </div>
 
-    <div class="space-y-6 max-w-3xl">
-      <!-- Account / Profile -->
-      <div
-        class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5 sm:p-6"
+    <!-- Tab navigation -->
+    <div class="flex items-center gap-2 border-b border-slate-200 dark:border-slate-800 pb-3 overflow-x-auto">
+      <button
+        v-for="tab in tabs"
+        :key="tab.id"
+        @click="activeTab = tab.id"
+        class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all shrink-0"
+        :class="
+          activeTab === tab.id
+            ? 'bg-primary-500 text-white shadow-md shadow-primary-500/25'
+            : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800'
+        "
       >
-        <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">
-          Profile
-        </h3>
+        {{ tab.label }}
+      </button>
+    </div>
+
+    <!-- Account & Security Tab -->
+    <div v-show="activeTab === 'account'" class="space-y-6">
+      <!-- Profile Card -->
+      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-primary-500/10 text-primary-500 flex items-center justify-center">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+              <circle cx="12" cy="7" r="4" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Profile Information</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Your personal details and identity</p>
+          </div>
+        </div>
+
         <form @submit.prevent="updateProfile" class="space-y-4">
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label
-                class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"
-                >Email</label
-              >
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                Email Address
+              </label>
               <input
                 :value="authStore.user?.email"
                 disabled
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-200 dark:border-slate-600 bg-slate-50 dark:bg-[#22303c] text-sm text-slate-500 dark:text-slate-400"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100/70 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-xs sm:text-sm cursor-not-allowed font-medium"
               />
             </div>
             <div>
-              <label
-                class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"
-                >Name</label
-              >
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                Display Name
+              </label>
               <input
                 v-model="profileName"
                 type="text"
-                placeholder="Your name"
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-[#22303c] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                placeholder="Your full name"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-medium"
               />
             </div>
           </div>
-          <button
-            type="submit"
-            class="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors"
-          >
-            Save Profile
-          </button>
+          <div class="flex justify-end pt-2">
+            <button
+              type="submit"
+              class="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/25 transition-all"
+            >
+              Save Profile
+            </button>
+          </div>
         </form>
       </div>
 
-      <!-- Change Password -->
-      <div
-        class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5 sm:p-6"
-      >
-        <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">
-          Change Password
-        </h3>
-        <form @submit.prevent="changePassword" class="space-y-4">
+      <!-- Change Password Card -->
+      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-500 flex items-center justify-center">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+              <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+            </svg>
+          </div>
           <div>
-            <label
-              class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"
-              >Current Password</label
-            >
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">Security & Password</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">Update your account master password</p>
+          </div>
+        </div>
+
+        <form @submit.prevent="changePassword" class="space-y-4 max-w-lg">
+          <div>
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              Current Password
+            </label>
             <input
               v-model="currentPassword"
               type="password"
+              placeholder="••••••••"
               required
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-[#22303c] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-mono"
             />
           </div>
           <div>
-            <label
-              class="block text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1"
-              >New Password</label
-            >
+            <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+              New Password (min 6 characters)
+            </label>
             <input
               v-model="newPassword"
               type="password"
+              placeholder="••••••••"
               required
               minlength="6"
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-[#22303c] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+              class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-800/80 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 transition-all font-mono"
             />
           </div>
-          <button
-            type="submit"
-            class="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors"
-          >
-            Update Password
-          </button>
+          <div class="flex justify-end pt-2">
+            <button
+              type="submit"
+              class="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/25 transition-all"
+            >
+              Update Password
+            </button>
+          </div>
         </form>
       </div>
 
-      <!-- Webhooks -->
-      <div
-        class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5 sm:p-6"
-      >
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-base font-semibold text-slate-900 dark:text-white">
-            Webhooks
-          </h3>
+      <!-- Danger Zone -->
+      <div class="glass-card rounded-2xl p-6 border border-red-500/30 dark:border-red-500/20 bg-red-500/5">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-red-600 dark:text-red-400">Account Session</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Sign out from this device to clear cached tokens
+            </p>
+          </div>
+          <button
+            @click="handleLogout"
+            class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-red-500/20 transition-all"
+          >
+            Sign Out
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Webhooks Tab -->
+    <div v-show="activeTab === 'webhooks'" class="space-y-6">
+      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80">
+        <div class="flex items-center justify-between mb-5">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl bg-indigo-500/10 text-indigo-500 flex items-center justify-center">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+              </svg>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">Active Webhooks</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">Receive HTTP POST notifications when asset events occur</p>
+            </div>
+          </div>
+
           <button
             @click="showWebhookModal = true"
-            class="px-3 py-1.5 rounded-lg text-xs font-medium text-primary-600 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
+            class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/25 transition-all"
           >
-            + Add Webhook
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Add Endpoint
           </button>
         </div>
 
-        <div
-          v-if="webhooks.length === 0"
-          class="text-sm text-slate-500 dark:text-slate-400 py-4 text-center"
-        >
-          No webhooks configured
+        <div v-if="webhooks.length === 0" class="text-center py-12 text-slate-400">
+          <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+          </svg>
+          <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">No webhooks registered</p>
+          <p class="text-xs text-slate-400 mt-1">Configure an endpoint to receive real-time events.</p>
         </div>
 
-        <div v-else class="space-y-2">
+        <div v-else class="space-y-3">
           <div
             v-for="wh in webhooks"
             :key="wh.id"
-            class="flex items-center justify-between p-3 rounded-lg bg-slate-50 dark:bg-[#22303c]"
+            class="flex items-center justify-between p-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-800"
           >
-            <div class="min-w-0">
-              <p
-                class="text-sm font-mono text-slate-900 dark:text-white truncate"
-              >
+            <div class="min-w-0 pr-4">
+              <p class="text-xs sm:text-sm font-mono font-medium text-slate-900 dark:text-white truncate">
                 {{ wh.url }}
               </p>
-              <div class="flex gap-1 mt-1">
+              <div class="flex flex-wrap gap-1.5 mt-2">
                 <span
                   v-for="ev in wh.events"
                   :key="ev"
-                  class="px-1.5 py-0.5 rounded text-xs bg-slate-200 dark:bg-slate-600 text-slate-600 dark:text-slate-300"
-                  >{{ ev }}</span
+                  class="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-primary-500/10 text-primary-600 dark:text-primary-400"
                 >
+                  {{ ev }}
+                </span>
               </div>
             </div>
+
             <button
               @click="deleteWebhook(wh.id)"
-              class="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors shrink-0 ml-3"
+              class="p-2 rounded-xl text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors shrink-0"
+              title="Delete endpoint"
             >
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-              >
-                <line x1="18" y1="6" x2="6" y2="18" />
-                <line x1="6" y1="6" x2="18" y2="18" />
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="3,6 5,6 21,6" />
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
               </svg>
             </button>
           </div>
         </div>
       </div>
+    </div>
 
-      <!-- API Integration -->
-      <div
-        class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5 sm:p-6"
-      >
-        <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-2">
-          API Integration
+    <!-- API Reference Tab -->
+    <div v-show="activeTab === 'api'" class="space-y-6">
+      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">
+          Upload API (cURL)
         </h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mb-5">
-          Use these examples to integrate UploadBox.
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          Authenticate with Bearer token or Secret Key to upload files programmatically.
         </p>
 
-        <div class="space-y-5">
-          <div>
-            <h4
-              class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-            >
-              Upload a file (cURL)
-            </h4>
-            <pre
-              class="p-4 rounded-lg bg-slate-900 text-slate-100 text-xs leading-relaxed overflow-x-auto"
-            ><code>curl -X POST {{ baseUrl }}/api/upload/file \
-  -H "Authorization: Bearer YOUR_SECRET_KEY" \
-  -F "file=@/path/to/file.jpg"</code></pre>
-          </div>
-
-          <div>
-            <h4
-              class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-2"
-            >
-              Image Transformations
-            </h4>
-            <pre
-              class="p-4 rounded-lg bg-slate-900 text-slate-100 text-xs leading-relaxed overflow-x-auto"
-            ><code># Resize
-{{ baseUrl }}/cdn/FILE_UUID/-/resize/800x600/filename.jpg
-
-# Format + Quality
-{{ baseUrl }}/cdn/FILE_UUID/-/format/webp/-/quality/80/filename.jpg
-
-# Operations: resize, crop, format, quality, blur,
-# sharpen, grayscale, rotate, flip, flop, preview</code></pre>
-          </div>
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs text-emerald-400 leading-relaxed overflow-x-auto">
+          <code>curl -X POST {{ baseUrl }}/api/upload/file \<br/>
+  -H "Authorization: Bearer YOUR_SECRET_KEY" \<br/>
+  -F "file=@/path/to/image.jpg"</code>
         </div>
       </div>
 
-      <!-- Keyboard Shortcuts -->
-      <div
-        class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5 sm:p-6"
-      >
-        <h3 class="text-base font-semibold text-slate-900 dark:text-white mb-4">
+      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">
+          On-The-Fly CDN Image Transformations
+        </h3>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+          Append URL transformation directives after the file UUID to perform smart image operations.
+        </p>
+
+        <div class="space-y-3">
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300">
+            <span class="text-slate-500 block mb-1"># Resize width & height:</span>
+            <span class="text-primary-400">{{ baseUrl }}/cdn/FILE_UUID/-/resize/800x600/image.jpg</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300">
+            <span class="text-slate-500 block mb-1"># Convert format & optimize quality:</span>
+            <span class="text-indigo-400">{{ baseUrl }}/cdn/FILE_UUID/-/format/webp/-/quality/80/image.webp</span>
+          </div>
+
+          <div class="p-3.5 rounded-xl bg-slate-900 border border-slate-800 font-mono text-xs text-slate-300">
+            <span class="text-slate-500 block mb-1"># Chain filters (blur + grayscale):</span>
+            <span class="text-amber-400">{{ baseUrl }}/cdn/FILE_UUID/-/blur/10/-/grayscale/image.jpg</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shortcuts Tab -->
+    <div v-show="activeTab === 'shortcuts'" class="space-y-6">
+      <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80">
+        <h3 class="text-base font-bold text-slate-900 dark:text-white mb-1">
           Keyboard Shortcuts
         </h3>
-        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-slate-600 dark:text-slate-300"
-              >Upload files</span
-            >
-            <kbd
-              class="px-2 py-1 rounded bg-slate-100 dark:bg-[#22303c] text-xs font-mono text-slate-600 dark:text-slate-300"
-              >Ctrl+U</kbd
-            >
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-slate-600 dark:text-slate-300"
-              >Search files</span
-            >
-            <kbd
-              class="px-2 py-1 rounded bg-slate-100 dark:bg-[#22303c] text-xs font-mono text-slate-600 dark:text-slate-300"
-              >Ctrl+K</kbd
-            >
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-slate-600 dark:text-slate-300"
-              >Delete selected</span
-            >
-            <kbd
-              class="px-2 py-1 rounded bg-slate-100 dark:bg-[#22303c] text-xs font-mono text-slate-600 dark:text-slate-300"
-              >Delete</kbd
-            >
-          </div>
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-slate-600 dark:text-slate-300"
-              >Toggle dark mode</span
-            >
-            <kbd
-              class="px-2 py-1 rounded bg-slate-100 dark:bg-[#22303c] text-xs font-mono text-slate-600 dark:text-slate-300"
-              >Ctrl+D</kbd
-            >
+        <p class="text-xs text-slate-500 dark:text-slate-400 mb-5">
+          Power-user keys to streamline your workflow
+        </p>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div
+            v-for="s in shortcuts"
+            :key="s.key"
+            class="flex items-center justify-between p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800"
+          >
+            <span class="text-xs sm:text-sm font-medium text-slate-700 dark:text-slate-300">
+              {{ s.label }}
+            </span>
+            <kbd class="px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-800 dark:text-slate-200 shadow-sm">
+              {{ s.key }}
+            </kbd>
           </div>
         </div>
-      </div>
-
-      <!-- Danger Zone -->
-      <div
-        class="bg-white dark:bg-[#192734] rounded-xl border border-red-200 dark:border-red-900 p-5 sm:p-6"
-      >
-        <h3 class="text-base font-semibold text-red-900 dark:text-red-400 mb-2">
-          Danger Zone
-        </h3>
-        <p class="text-sm text-slate-500 dark:text-slate-400 mb-4">
-          Irreversible actions
-        </p>
-        <button
-          @click="handleLogout"
-          class="px-4 py-2.5 rounded-lg bg-red-50 dark:bg-red-900/20 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors"
-        >
-          Sign Out
-        </button>
       </div>
     </div>
 
@@ -274,44 +310,39 @@
         v-if="showWebhookModal"
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
       >
-        <div
-          class="absolute inset-0 bg-black/50"
-          @click="showWebhookModal = false"
-        ></div>
-        <div
-          class="relative bg-white dark:bg-[#192734] rounded-2xl shadow-xl w-full max-w-md p-6"
-        >
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="showWebhookModal = false"></div>
+        <div class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-md p-6 z-10 animate-in zoom-in-95 duration-150">
           <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-4">
-            Add Webhook
+            Register Webhook Endpoint
           </h2>
+
           <form @submit.prevent="addWebhook" class="space-y-4">
             <div>
-              <label
-                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-                >URL</label
-              >
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
+                Endpoint URL
+              </label>
               <input
                 v-model="newWebhook.url"
                 type="url"
-                placeholder="https://your-server.com/webhook"
+                placeholder="https://api.yourdomain.com/webhook"
                 required
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-[#22303c] dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/80 text-slate-900 dark:text-white text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 font-mono"
               />
             </div>
+
             <div>
-              <label
-                class="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5"
-                >Events</label
-              >
+              <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-2">
+                Trigger Events
+              </label>
               <div class="flex flex-wrap gap-2">
                 <label
                   v-for="ev in availableEvents"
                   :key="ev"
-                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border cursor-pointer transition-colors"
+                  class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl border cursor-pointer transition-all select-none text-xs font-medium"
                   :class="
                     newWebhook.events.includes(ev)
-                      ? 'border-primary-400 bg-primary-50 dark:bg-primary-900/30 text-primary-700 dark:text-primary-300'
-                      : 'border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300'
+                      ? 'border-primary-500 bg-primary-500/10 text-primary-600 dark:text-primary-400 font-bold'
+                      : 'border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800'
                   "
                 >
                   <input
@@ -320,23 +351,24 @@
                     v-model="newWebhook.events"
                     class="hidden"
                   />
-                  <span class="text-xs font-medium">{{ ev }}</span>
+                  <span>{{ ev }}</span>
                 </label>
               </div>
             </div>
-            <div class="flex justify-end gap-3 pt-2">
+
+            <div class="flex justify-end gap-3 pt-3">
               <button
                 type="button"
                 @click="showWebhookModal = false"
-                class="px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+                class="px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                class="px-4 py-2.5 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors"
+                class="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/25 transition-all"
               >
-                Add
+                Add Endpoint
               </button>
             </div>
           </form>
@@ -358,6 +390,23 @@ const authStore = useAuthStore();
 const toast = useToast();
 const baseUrl = window.location.origin;
 
+const activeTab = ref<string>("account");
+
+const tabs = [
+  { id: "account", label: "Account & Security" },
+  { id: "webhooks", label: "Webhooks" },
+  { id: "api", label: "API Reference" },
+  { id: "shortcuts", label: "Shortcuts" },
+];
+
+const shortcuts = [
+  { label: "Upload files modal", key: "Ctrl + U" },
+  { label: "Quick search dialog", key: "Ctrl + K" },
+  { label: "Delete selected files", key: "Delete" },
+  { label: "Toggle appearance theme", key: "Ctrl + D" },
+  { label: "Paste image from clipboard", key: "Ctrl + V" },
+];
+
 // Profile
 const profileName = ref(authStore.user?.name || "");
 const currentPassword = ref("");
@@ -370,7 +419,7 @@ async function updateProfile() {
       authStore.user.name = data.name;
       localStorage.setItem("user", JSON.stringify(authStore.user));
     }
-    toast.success("Profile updated");
+    toast.success("Profile updated successfully");
   } catch {
     toast.error("Failed to update profile");
   }
@@ -385,12 +434,13 @@ async function changePassword() {
     await authExtApi.changePassword(currentPassword.value, newPassword.value);
     currentPassword.value = "";
     newPassword.value = "";
-    toast.success("Password changed");
+    toast.success("Password updated successfully");
   } catch (err: any) {
     toast.error(err.response?.data?.error || "Failed to change password");
   }
 }
 
+// Webhooks
 const webhooks = ref<any[]>([]);
 const showWebhookModal = ref(false);
 const newWebhook = ref({ url: "", events: [] as string[] });
@@ -399,7 +449,7 @@ const availableEvents = ["file.uploaded", "file.deleted", "file.restored"];
 onMounted(async () => {
   try {
     const { data } = await webhooksApi.list();
-    webhooks.value = data.webhooks;
+    webhooks.value = data.webhooks || [];
   } catch {
     /* ignore */
   }
@@ -418,7 +468,7 @@ async function addWebhook() {
     webhooks.value.push(data);
     showWebhookModal.value = false;
     newWebhook.value = { url: "", events: [] };
-    toast.success("Webhook added");
+    toast.success("Webhook endpoint registered");
   } catch {
     toast.error("Failed to add webhook");
   }
@@ -428,7 +478,7 @@ async function deleteWebhook(id: string) {
   try {
     await webhooksApi.delete(id);
     webhooks.value = webhooks.value.filter((w) => w.id !== id);
-    toast.success("Webhook deleted");
+    toast.success("Webhook endpoint deleted");
   } catch {
     toast.error("Failed to delete webhook");
   }

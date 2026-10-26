@@ -8,20 +8,20 @@
     >
       <div
         v-if="visible"
-        class="fixed inset-0 z-9998 flex items-center justify-center p-4"
+        class="fixed inset-0 z-9998 flex items-center justify-center p-4 sm:p-6"
       >
-        <div class="absolute inset-0 bg-black/50" @click="handleCancel"></div>
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm" @click="handleCancel"></div>
         <div
-          class="relative bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 animate-in zoom-in-95"
+          class="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl w-full max-w-sm p-6 text-center animate-in zoom-in-95 duration-150 z-10"
         >
           <!-- Icon -->
           <div
-            class="flex items-center justify-center w-12 h-12 rounded-full mx-auto mb-4"
+            class="flex items-center justify-center w-14 h-14 rounded-2xl mx-auto mb-4"
             :class="iconBg"
           >
             <svg
               v-if="type === 'danger'"
-              class="w-6 h-6 text-red-600"
+              class="w-7 h-7 text-red-500"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -36,7 +36,7 @@
             </svg>
             <svg
               v-else
-              class="w-6 h-6 text-amber-600"
+              class="w-7 h-7 text-amber-500"
               viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
@@ -52,25 +52,25 @@
             </svg>
           </div>
 
-          <h3 class="text-lg font-semibold text-slate-900 text-center">
+          <h3 class="text-lg font-bold text-slate-900 dark:text-white">
             {{ title }}
           </h3>
-          <p class="mt-2 text-sm text-slate-500 text-center">{{ message }}</p>
+          <p class="mt-2 text-xs sm:text-sm text-slate-500 dark:text-slate-400 leading-relaxed">{{ message }}</p>
 
           <div class="flex gap-3 mt-6">
             <button
               @click="handleCancel"
-              class="flex-1 px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+              class="flex-1 px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               {{ cancelText }}
             </button>
             <button
               @click="handleConfirm"
-              class="flex-1 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition-colors"
+              class="flex-1 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-semibold text-white shadow-md transition-all active:scale-95"
               :class="
                 type === 'danger'
-                  ? 'bg-red-500 hover:bg-red-600'
-                  : 'bg-primary-500 hover:bg-primary-600'
+                  ? 'bg-red-500 hover:bg-red-600 shadow-red-500/25'
+                  : 'bg-primary-500 hover:bg-primary-600 shadow-primary-500/25'
               "
             >
               {{ confirmText }}
@@ -109,7 +109,9 @@ const emit = defineEmits<{
 }>();
 
 const iconBg = computed(() =>
-  props.type === "danger" ? "bg-red-100" : "bg-amber-100",
+  props.type === "danger"
+    ? "bg-red-500/10 dark:bg-red-500/20 ring-8 ring-red-500/5"
+    : "bg-amber-500/10 dark:bg-amber-500/20 ring-8 ring-amber-500/5",
 );
 
 function handleConfirm() {

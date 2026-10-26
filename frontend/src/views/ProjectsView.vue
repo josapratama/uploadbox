@@ -1,32 +1,30 @@
 <template>
-  <div>
+  <div class="space-y-6 max-w-5xl mx-auto">
     <!-- Header -->
-    <div
-      class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6"
-    >
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
       <div>
-        <h1 class="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white">Projects</h1>
+        <div class="flex items-center gap-2.5">
+          <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Projects & Workspaces
+          </h1>
+          <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20">
+            {{ projects.length }} active
+          </span>
+        </div>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Manage your projects and API keys
+          Separate environments, generate project-scoped API keys, and manage storage quotas.
         </p>
       </div>
+
       <button
         @click="showCreateModal = true"
-        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors"
+        class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition-all hover:scale-[1.02]"
       >
-        <svg
-          class="w-4 h-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2.5"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
+        <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <line x1="12" y1="5" x2="12" y2="19" />
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
-        New Project
+        <span>New Project</span>
       </button>
     </div>
 
@@ -35,105 +33,160 @@
       <div
         v-for="project in projects"
         :key="project.id"
-        class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden"
+        class="rounded-3xl bg-white dark:bg-[#0f172a] border transition-all overflow-hidden shadow-xs"
+        :class="
+          isProjectActive(project.id)
+            ? 'border-indigo-500/70 ring-2 ring-indigo-500/10 shadow-lg'
+            : 'border-slate-200/80 dark:border-slate-800'
+        "
       >
-        <div class="p-5">
-          <div class="flex items-start justify-between">
-            <div>
-              <h3 class="text-base font-semibold text-slate-900 dark:text-white">
-                {{ project.name }}
-              </h3>
-              <p v-if="project.description" class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-                {{ project.description }}
-              </p>
-            </div>
-            <div class="flex items-center gap-2">
-              <span
-                v-if="isProjectActive(project.id)"
-                class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-xs font-medium text-emerald-700 dark:text-emerald-400"
-              >Active Project</span>
-              <button
-                v-else
-                @click="setActiveProject(project)"
-                class="px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+        <div class="p-6">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-start gap-4">
+              <div
+                class="w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-xs"
+                :class="
+                  isProjectActive(project.id)
+                    ? 'bg-gradient-to-tr from-indigo-600 to-violet-600 text-white shadow-indigo-500/30'
+                    : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                "
               >
-                Switch to this project
+                <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
+                </svg>
+              </div>
+
+              <div>
+                <div class="flex items-center gap-2">
+                  <h3 class="text-base font-bold text-slate-900 dark:text-white">
+                    {{ project.name }}
+                  </h3>
+                  <span
+                    v-if="isProjectActive(project.id)"
+                    class="px-2 py-0.5 text-[10px] font-bold rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 flex items-center gap-1"
+                  >
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                    Current Active
+                  </span>
+                </div>
+                <p class="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {{ project.description || "General uploads and media assets workspace." }}
+                </p>
+              </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+              <button
+                v-if="!isProjectActive(project.id)"
+                @click="setActiveProject(project)"
+                class="px-3.5 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              >
+                Switch to Workspace
               </button>
             </div>
           </div>
 
-          <!-- API Keys section -->
-          <div class="mt-5 pt-5 border-t border-slate-100 dark:border-slate-700">
+          <!-- API Keys Drawer Section -->
+          <div class="mt-6 pt-5 border-t border-slate-100 dark:border-slate-800/80">
             <div class="flex items-center justify-between mb-3">
-              <h4 class="text-sm font-semibold text-slate-700 dark:text-slate-200">API Keys</h4>
+              <div class="flex items-center gap-2">
+                <svg class="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 2l-2 2m-1.5 1.5L14 9l-1.5-1.5L10 10l1.5 1.5L7 16l-3-3L1 16l4 4 3-1 2.5-2.5L12 18l2.5-2.5L13 14l3.5-3.5 1.5 1.5L22 8z" />
+                </svg>
+                <h4 class="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  Project API Keys
+                </h4>
+              </div>
+
               <div class="flex gap-2">
                 <button
                   v-if="!projectKeys[project.id]"
                   @click="loadKeys(project.id)"
-                  class="px-3 py-1.5 rounded-md text-xs font-medium text-slate-600 dark:text-slate-200 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 transition-colors"
+                  class="px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
                 >
-                  Show Keys
+                  Load Keys
                 </button>
                 <button
                   @click="generateKey(project.id)"
-                  class="px-3 py-1.5 rounded-md text-xs font-medium text-primary-600 dark:text-primary-400 bg-primary-50 dark:bg-primary-900/30 hover:bg-primary-100 dark:hover:bg-primary-900/50 transition-colors"
+                  class="px-3 py-1.5 rounded-xl text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950/40 hover:bg-indigo-100 dark:hover:bg-indigo-950/60 transition-colors flex items-center gap-1"
                 >
-                  + New Key
+                  <span>+ Generate New Key</span>
                 </button>
               </div>
             </div>
 
-            <div v-if="projectKeys[project.id]" class="space-y-2">
+            <!-- Keys list -->
+            <div v-if="projectKeys[project.id]" class="space-y-2.5">
+              <div
+                v-if="projectKeys[project.id].length === 0"
+                class="p-4 rounded-xl bg-slate-50 dark:bg-slate-800/40 text-center text-xs text-slate-400"
+              >
+                No keys generated yet. Create one to authenticate API & SDK uploads.
+              </div>
+
               <div
                 v-for="key in projectKeys[project.id]"
                 :key="key.id"
-                class="p-3 rounded-lg bg-slate-50 dark:bg-[#22303c] border border-slate-100 dark:border-slate-600"
+                class="p-3.5 rounded-2xl bg-slate-50/80 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800"
               >
                 <div class="flex items-center justify-between mb-2">
-                  <span class="text-sm font-medium text-slate-900 dark:text-white">{{
-                    key.name
-                  }}</span>
+                  <span class="text-xs font-bold text-slate-900 dark:text-white">{{ key.name }}</span>
                   <button
                     @click="revokeKey(project.id, key.id)"
                     :disabled="!key.isActive"
-                    class="px-2.5 py-1 rounded-md text-xs font-medium transition-colors"
+                    class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition-colors"
                     :class="
                       key.isActive
-                        ? 'text-red-600 bg-red-50 hover:bg-red-100'
-                        : 'text-slate-400 bg-slate-100 cursor-not-allowed'
+                        ? 'text-rose-600 bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30'
+                        : 'text-slate-400 bg-slate-100 dark:bg-slate-800 cursor-not-allowed'
                     "
                   >
-                    {{ key.isActive ? "Revoke" : "Revoked" }}
+                    {{ key.isActive ? "Revoke Key" : "Revoked" }}
                   </button>
                 </div>
-                <div class="space-y-1.5">
+
+                <div class="space-y-1.5 text-xs font-mono">
                   <div class="flex items-center gap-2">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 w-12 shrink-0"
-                      >Public</span
+                    <span class="text-[11px] text-slate-400 w-14 shrink-0 font-sans font-medium">Public</span>
+                    <input
+                      :value="key.publicKey"
+                      readonly
+                      class="flex-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 select-all"
+                    />
+                    <button
+                      @click="copyText(key.publicKey)"
+                      class="p-1 rounded-lg text-slate-400 hover:text-indigo-600"
+                      title="Copy Public Key"
                     >
-                    <code
-                      class="text-xs font-mono text-slate-700 dark:text-slate-200 bg-white dark:bg-[#15202b] px-2 py-1 rounded border border-slate-200 dark:border-slate-600 truncate"
-                      >{{ key.publicKey }}</code
-                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
+                    </button>
                   </div>
+
                   <div class="flex items-center gap-2">
-                    <span class="text-xs text-slate-500 dark:text-slate-400 w-12 shrink-0"
-                      >Secret</span
-                    >
-                    <code
-                      class="text-xs font-mono text-slate-700 dark:text-slate-200 bg-white dark:bg-[#15202b] px-2 py-1 rounded border border-slate-200 dark:border-slate-600 truncate"
-                    >
-                      {{
-                        showSecrets[key.id]
-                          ? key.secretKey
-                          : "••••••••••••••••••••••••"
-                      }}
-                    </code>
+                    <span class="text-[11px] text-slate-400 w-14 shrink-0 font-sans font-medium">Secret</span>
+                    <input
+                      :value="showSecrets[key.id] ? key.secretKey : '••••••••••••••••••••••••••••••••'"
+                      readonly
+                      class="flex-1 px-2.5 py-1 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300 select-all"
+                    />
                     <button
                       @click="showSecrets[key.id] = !showSecrets[key.id]"
-                      class="text-xs text-primary-600 dark:text-primary-400 hover:text-primary-700 font-medium shrink-0"
+                      class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold px-2 hover:underline"
                     >
                       {{ showSecrets[key.id] ? "Hide" : "Show" }}
+                    </button>
+                    <button
+                      @click="copyText(key.secretKey)"
+                      class="p-1 rounded-lg text-slate-400 hover:text-indigo-600"
+                      title="Copy Secret Key"
+                    >
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                      </svg>
                     </button>
                   </div>
                 </div>
@@ -151,50 +204,59 @@
         class="fixed inset-0 z-50 flex items-center justify-center p-4"
       >
         <div
-          class="absolute inset-0 bg-black/50"
+          class="absolute inset-0 bg-slate-900/60 backdrop-blur-xs"
           @click="showCreateModal = false"
         ></div>
         <div
-          class="relative bg-white dark:bg-[#192734] rounded-2xl shadow-xl w-full max-w-md p-6"
+          class="relative bg-white dark:bg-[#0f172a] rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl w-full max-w-md p-6 sm:p-7 space-y-4"
         >
-          <h2 class="text-lg font-bold text-slate-900 mb-4">Create Project</h2>
+          <div class="flex items-center justify-between">
+            <h2 class="text-base font-extrabold text-slate-900 dark:text-white">Create New Workspace</h2>
+            <button @click="showCreateModal = false" class="text-slate-400 hover:text-slate-600 dark:hover:text-white">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </svg>
+            </button>
+          </div>
+
           <form @submit.prevent="createProject" class="space-y-4">
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5"
-                >Project Name</label
-              >
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                Workspace Name
+              </label>
               <input
                 v-model="newProject.name"
                 type="text"
-                placeholder="My Project"
+                placeholder="e.g. E-Commerce Assets"
                 required
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
               />
             </div>
             <div>
-              <label class="block text-sm font-medium text-slate-700 mb-1.5"
-                >Description (optional)</label
-              >
+              <label class="block text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1.5">
+                Description (optional)
+              </label>
               <textarea
                 v-model="newProject.description"
-                placeholder="Project description"
+                placeholder="Notes about this project"
                 rows="3"
-                class="w-full px-4 py-2.5 rounded-lg border border-slate-300 text-sm placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500/20 focus:border-primary-500 resize-none"
+                class="w-full px-4 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 dark:bg-slate-800 dark:text-white text-xs placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/30 resize-none"
               ></textarea>
             </div>
-            <div class="flex justify-end gap-3 pt-2">
+            <div class="flex justify-end gap-2.5 pt-2">
               <button
                 type="button"
                 @click="showCreateModal = false"
-                class="px-4 py-2.5 rounded-lg border border-slate-300 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+                class="px-4 py-2 rounded-xl border border-slate-300 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                class="px-4 py-2.5 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors"
+                class="px-5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold shadow-xs transition-colors"
               >
-                Create
+                Create Workspace
               </button>
             </div>
           </form>
@@ -228,6 +290,11 @@ function setActiveProject(project: any) {
   toast.success(`Switched to "${project.name}"`);
 }
 
+function copyText(text: string) {
+  navigator.clipboard.writeText(text);
+  toast.success("Copied to clipboard");
+}
+
 onMounted(async () => {
   await fetchProjects();
 });
@@ -249,9 +316,11 @@ async function createProject() {
     );
     showCreateModal.value = false;
     newProject.value = { name: "", description: "" };
+    toast.success("Project created successfully");
     await fetchProjects();
   } catch (err) {
     console.error("Failed to create project:", err);
+    toast.error("Failed to create project");
   }
 }
 
@@ -268,6 +337,7 @@ async function generateKey(projectId: string) {
   try {
     await projectsApi.createKey(projectId, "API Key");
     await loadKeys(projectId);
+    toast.success("New API Key generated");
   } catch (err) {
     console.error("Failed to generate key:", err);
   }
@@ -279,11 +349,9 @@ async function revokeKey(projectId: string, keyId: string) {
   try {
     await projectsApi.revokeKey(projectId, keyId);
     await loadKeys(projectId);
+    toast.info("API key revoked");
   } catch (err) {
     console.error("Failed to revoke key:", err);
   }
 }
 </script>
-
-
-

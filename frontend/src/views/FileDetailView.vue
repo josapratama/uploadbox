@@ -1,355 +1,286 @@
 <template>
-  <div v-if="file">
-    <!-- Back button + title -->
-    <div class="flex items-center gap-3 mb-6">
-      <button
-        @click="$router.back()"
-        class="p-2 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-      >
-        <svg
-          class="w-4 h-4"
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          stroke-width="2"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-        >
-          <polyline points="15,18 9,12 15,6" />
-        </svg>
-      </button>
-      <div class="flex items-center gap-2 min-w-0">
-        <h1
-          v-if="!isRenaming"
-          class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white truncate"
-        >
-          {{ file.originalFilename }}
-        </h1>
-        <input
-          v-else
-          ref="renameInput"
-          v-model="newFilename"
-          @keyup.enter="saveRename"
-          @keyup.escape="cancelRename"
-          @blur="saveRename"
-          class="text-lg font-bold text-slate-900 dark:text-white border border-primary-300 dark:border-primary-600 dark:bg-[#22303c] rounded-lg px-2 py-1 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
-        />
+  <div v-if="file" class="max-w-7xl mx-auto space-y-6">
+    <!-- Top Bar with Back, Title & Rename -->
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div class="flex items-center gap-3 min-w-0">
         <button
-          v-if="!isRenaming"
-          @click="startRename"
-          class="p-1.5 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
-          title="Rename"
+          @click="$router.back()"
+          class="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0f172a] text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs"
         >
-          <svg
-            class="w-4 h-4"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-            stroke-linecap="round"
-            stroke-linejoin="round"
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="15,18 9,12 15,6" />
+          </svg>
+        </button>
+
+        <div class="flex items-center gap-2 min-w-0">
+          <h1
+            v-if="!isRenaming"
+            class="text-lg sm:text-2xl font-extrabold text-slate-900 dark:text-white truncate tracking-tight"
           >
-            <path
-              d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-            />
-            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            {{ file.originalFilename }}
+          </h1>
+          <input
+            v-else
+            ref="renameInput"
+            v-model="newFilename"
+            @keyup.enter="saveRename"
+            @keyup.escape="cancelRename"
+            @blur="saveRename"
+            class="text-lg sm:text-xl font-bold text-slate-900 dark:text-white border border-indigo-400 dark:border-indigo-500 dark:bg-slate-800 rounded-xl px-3 py-1 focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+          />
+          <button
+            v-if="!isRenaming"
+            @click="startRename"
+            class="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
+            title="Rename file"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
+              <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Quick Action Buttons -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <button
+          v-if="file.isImage"
+          @click="showEditor = true"
+          class="px-3.5 py-2 rounded-xl text-xs font-bold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 20h9" />
+            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z" />
+          </svg>
+          <span>Edit Image</span>
+        </button>
+
+        <a
+          :href="file.cdnUrl"
+          download
+          target="_blank"
+          class="px-3.5 py-2 rounded-xl text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-500 transition-colors shadow-xs shadow-indigo-500/20 flex items-center gap-1.5"
+        >
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7,10 12,15 17,10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          <span>Download</span>
+        </a>
+
+        <button
+          @click="showDeleteConfirm = true"
+          class="p-2 rounded-xl text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors"
+          title="Move to trash"
+        >
+          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="3,6 5,6 21,6" />
+            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
           </svg>
         </button>
       </div>
     </div>
 
+    <!-- Main 2-Column Layout -->
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      <!-- Preview (2 cols) -->
-      <div class="lg:col-span-2">
-        <div
-          class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 overflow-hidden"
-        >
-          <div
-            class="flex items-center justify-center min-h-[300px] sm:min-h-[400px] bg-slate-50 p-4"
-          >
+      <!-- Media Stage Preview (2 cols) -->
+      <div class="lg:col-span-2 space-y-6">
+        <div class="rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 overflow-hidden shadow-xs">
+          <!-- Preview Viewer -->
+          <div class="flex items-center justify-center min-h-[360px] sm:min-h-[460px] bg-slate-900/90 p-4 relative group">
             <img
               v-if="file.isImage"
               :src="file.cdnUrl"
               :alt="file.originalFilename"
-              class="max-w-full max-h-[500px] object-contain rounded-lg"
+              class="max-w-full max-h-[560px] object-contain rounded-xl shadow-2xl"
             />
             <video
               v-else-if="file.isVideo"
               :src="file.cdnUrl"
               controls
-              class="max-w-full max-h-[500px] rounded-lg"
+              class="max-w-full max-h-[560px] rounded-xl shadow-2xl"
             ></video>
-            <div v-else class="text-center text-slate-400 py-12">
-              <div
-                class="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-slate-100 mb-3"
-              >
-                <component :is="getFileIcon(file.mimeType)" class="w-10 h-10" />
+            <div v-else class="text-center text-slate-400 py-16">
+              <div class="w-20 h-20 rounded-2xl bg-slate-800 flex items-center justify-center mx-auto mb-3 text-indigo-400">
+                <svg class="w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                  <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                  <polyline points="14,2 14,8 20,8" />
+                </svg>
               </div>
-              <p class="text-sm">{{ file.mimeType }}</p>
+              <p class="text-sm font-semibold text-slate-300">{{ file.mimeType }}</p>
+              <p class="text-xs text-slate-500 mt-1">Preview not available for this binary format</p>
+            </div>
+
+            <!-- Resolution / Format Tag Overlay -->
+            <div v-if="file.width && file.height" class="absolute bottom-3 right-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md text-white text-[11px] font-mono">
+              {{ file.width }} × {{ file.height }} px
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Info sidebar -->
-      <div class="space-y-4">
-        <!-- File info -->
-        <div
-          class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5"
-        >
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-4">
-            File Information
-          </h3>
-          <dl class="space-y-3">
-            <div>
-              <dt
-                class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-              >
-                File ID
-              </dt>
-              <dd class="mt-0.5 text-sm text-slate-900 dark:text-slate-200 font-mono break-all">
-                {{ file.id }}
-              </dd>
-            </div>
-            <div>
-              <dt
-                class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-              >
-                MIME Type
-              </dt>
-              <dd class="mt-0.5 text-sm text-slate-900 dark:text-slate-200">{{ file.mimeType }}</dd>
-            </div>
-            <div>
-              <dt
-                class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-              >
-                Size
-              </dt>
-              <dd class="mt-0.5 text-sm text-slate-900 dark:text-slate-200">
-                {{ formatSize(file.size) }}
-              </dd>
-            </div>
-            <div>
-              <dt
-                class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-              >
-                Folder
-              </dt>
-              <dd class="mt-0.5 text-sm text-slate-900 dark:text-slate-200 flex items-center gap-2">
-                <span>{{ file.folder || "/" }}</span>
-                <button
-                  @click="changeFolder"
-                  class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
-                >
-                  Change
-                </button>
-              </dd>
-            </div>
-            <div v-if="file.width && file.height">
-              <dt
-                class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-              >
-                Dimensions
-              </dt>
-              <dd class="mt-0.5 text-sm text-slate-900 dark:text-slate-200">
-                {{ file.width }} × {{ file.height }}px
-              </dd>
-            </div>
-            <div>
-              <dt
-                class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
-              >
-                Uploaded
-              </dt>
-              <dd class="mt-0.5 text-sm text-slate-900 dark:text-slate-200">
-                {{ new Date(file.uploadedAt).toLocaleString() }}
-              </dd>
-            </div>
-          </dl>
-        </div>
+        <!-- CDN URL & Embedding Card -->
+        <div class="p-6 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>CDN Delivery Links</span>
+            </h3>
+            <span class="text-xs text-slate-400 font-mono">Global Edge Cache</span>
+          </div>
 
-        <!-- CDN URL -->
-        <div
-          class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5"
-        >
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">CDN URL</h3>
-          <div class="flex gap-2">
-            <input
-              :value="file.cdnUrl"
-              readonly
-              class="flex-1 px-3 py-2 rounded-lg bg-slate-50 dark:bg-[#22303c] border border-slate-200 dark:border-slate-600 text-xs font-mono text-slate-600 dark:text-slate-300 truncate"
-            />
+          <!-- Format Tabs -->
+          <div class="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-xl max-w-fit text-xs font-semibold">
             <button
-              @click="copyUrl(file.cdnUrl)"
-              class="px-3 py-2 rounded-lg bg-slate-100 dark:bg-slate-600 text-xs font-medium text-slate-600 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-500 transition-colors shrink-0"
+              v-for="fmt in ['direct', 'markdown', 'html']"
+              :key="fmt"
+              @click="cdnFormat = fmt"
+              class="px-3 py-1.5 rounded-lg capitalize transition-all"
+              :class="cdnFormat === fmt ? 'bg-white dark:bg-[#0f172a] text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'"
             >
-              Copy
+              {{ fmt }}
             </button>
           </div>
 
-          <!-- Transformations -->
-          <div
-            v-if="file.isImage"
-            class="mt-4 pt-4 border-t border-slate-100 dark:border-slate-700/50"
-          >
-            <h4
-              class="text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2"
-            >
-              Quick Links
-            </h4>
-            <div class="space-y-1.5">
-              <div
-                class="p-2 rounded-lg bg-slate-50 dark:bg-[#22303c] cursor-pointer hover:bg-slate-100 dark:hover:bg-[#22303c]/80 transition-colors"
-                @click="
-                  copyUrl(
-                    `${cdnBase}/-/resize/200x200/${file.originalFilename}`,
-                  )
-                "
-              >
-                <code
-                  class="text-xs text-primary-600 dark:text-primary-400 break-all"
-                  >/-/resize/200x200/</code
-                >
-              </div>
-              <div
-                class="p-2 rounded-lg bg-slate-50 dark:bg-[#22303c] cursor-pointer hover:bg-slate-100 dark:hover:bg-[#22303c]/80 transition-colors"
-                @click="
-                  copyUrl(`${cdnBase}/-/format/webp/${file.originalFilename}`)
-                "
-              >
-                <code
-                  class="text-xs text-primary-600 dark:text-primary-400 break-all"
-                  >/-/format/webp/</code
-                >
-              </div>
+          <!-- Link Output Bar -->
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <input
+                :value="formattedCdnLink"
+                readonly
+                @focus="($event.target as HTMLInputElement).select()"
+                class="w-full pl-9 pr-3 py-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 text-xs font-mono text-slate-700 dark:text-slate-200 select-all focus:outline-none focus:ring-1 focus:ring-indigo-500"
+              />
+              <svg class="w-3.5 h-3.5 text-indigo-500 absolute left-3 top-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <line x1="2" y1="12" x2="22" y2="12" />
+              </svg>
             </div>
+
+            <button
+              @click="copyUrl(formattedCdnLink)"
+              class="px-4 py-2.5 rounded-xl text-xs font-bold transition-all shrink-0 flex items-center gap-1.5 shadow-xs"
+              :class="
+                isCopied
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+              "
+            >
+              <svg v-if="isCopied" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <svg v-else class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+              <span>{{ isCopied ? 'Copied!' : 'Copy' }}</span>
+            </button>
           </div>
         </div>
 
-        <!-- CDN URL Builder (for images) -->
+        <!-- Interactive URL Builder / Transformations -->
         <CdnUrlBuilder
           v-if="file.isImage"
-          :file-id="file.id"
-          :filename="file.originalFilename"
+          :file="file"
+          :cdn-base="cdnBase"
         />
+      </div>
 
-        <!-- Share Link -->
-        <div
-          class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5"
-        >
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">
-            Share
+      <!-- Info & Sharing Sidebar (1 col) -->
+      <div class="space-y-5">
+        <!-- Metadata Specs Card -->
+        <div class="p-6 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="12" y1="16" x2="12" y2="12" />
+              <line x1="12" y1="8" x2="12.01" y2="8" />
+            </svg>
+            <span>Asset Specs</span>
           </h3>
-          <div class="space-y-3">
-            <button
-              @click="createShareLink"
-              :disabled="creatingShare"
-              class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
-            >
-              {{ creatingShare ? "Creating..." : "+ Generate Share Link" }}
-            </button>
-            <div
-              v-if="shareUrl"
-              class="p-3 rounded-lg bg-slate-50 dark:bg-[#22303c]"
-            >
-              <p class="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                Public link (expires in 24h)
-              </p>
-              <div class="flex gap-2">
-                <input
-                  :value="shareUrl"
-                  readonly
-                  class="flex-1 px-3 py-1.5 rounded-md bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 text-xs font-mono text-slate-600 dark:text-slate-200 truncate"
-                />
+
+          <div class="space-y-3 divide-y divide-slate-100 dark:divide-slate-800/80 text-xs">
+            <div class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Size</span>
+              <span class="font-bold text-slate-800 dark:text-white">{{ formatSize(file.size) }}</span>
+            </div>
+            <div class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">MIME Type</span>
+              <span class="font-mono text-slate-800 dark:text-white">{{ file.mimeType }}</span>
+            </div>
+            <div class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Folder</span>
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-slate-800 dark:text-white">{{ file.folder || "/" }}</span>
                 <button
-                  @click="copyUrl(shareUrl)"
-                  class="px-3 py-1.5 rounded-md text-xs font-medium bg-primary-50 text-primary-600 hover:bg-primary-100 transition-colors shrink-0"
+                  @click="changeFolder"
+                  class="text-indigo-600 dark:text-indigo-400 font-bold hover:underline"
                 >
-                  Copy
+                  Edit
                 </button>
               </div>
+            </div>
+            <div v-if="file.width && file.height" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Dimensions</span>
+              <span class="font-mono text-slate-800 dark:text-white">{{ file.width }} × {{ file.height }}px</span>
+            </div>
+            <div class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Uploaded Date</span>
+              <span class="text-slate-600 dark:text-slate-300">{{ new Date(file.uploadedAt).toLocaleDateString() }}</span>
+            </div>
+            <div class="pt-2">
+              <span class="text-slate-400 block mb-1">Unique Asset ID</span>
+              <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400 break-all select-all block bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                {{ file.id }}
+              </span>
             </div>
           </div>
         </div>
 
-        <!-- Actions -->
-        <div
-          class="bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5"
-        >
-          <h3 class="text-sm font-semibold text-slate-900 dark:text-white mb-3">
-            Actions
+        <!-- Public Share Link Generator -->
+        <div class="p-6 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-3">
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+            <svg class="w-4 h-4 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="18" cy="5" r="3" />
+              <circle cx="6" cy="12" r="3" />
+              <circle cx="18" cy="19" r="3" />
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49" />
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49" />
+            </svg>
+            <span>Public Share Link</span>
           </h3>
-          <div class="flex gap-2">
-            <a
-              :href="file.cdnUrl"
-              download
-              class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
-            >
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-                <polyline points="7,10 12,15 17,10" />
-                <line x1="12" y1="15" x2="12" y2="3" />
-              </svg>
-              Download
-            </a>
+          <p class="text-xs text-slate-500 dark:text-slate-400">
+            Generate a secure link with download limits or expiry to share with external clients.
+          </p>
+
+          <div v-if="shareUrl" class="space-y-2 pt-1">
+            <input
+              :value="shareUrl"
+              readonly
+              class="w-full px-3 py-2 text-xs font-mono rounded-xl bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 select-all"
+            />
             <button
-              @click="showDeleteConfirm = true"
-              class="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-red-50 text-sm font-medium text-red-600 hover:bg-red-100 transition-colors"
+              @click="copyUrl(shareUrl)"
+              class="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-xs font-bold text-slate-800 dark:text-white transition-colors"
             >
-              <svg
-                class="w-4 h-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              >
-                <polyline points="3,6 5,6 21,6" />
-                <path
-                  d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
-                />
-              </svg>
-              Delete
+              Copy Public Link
             </button>
           </div>
-          <!-- Edit button for images -->
+
           <button
-            v-if="file.isImage"
-            @click="showEditor = true"
-            class="w-full mt-2 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors"
+            v-else
+            @click="createShareLink"
+            :disabled="creatingShare"
+            class="w-full py-2.5 rounded-xl border border-indigo-200 dark:border-indigo-500/30 text-indigo-600 dark:text-indigo-400 text-xs font-bold hover:bg-indigo-50 dark:hover:bg-indigo-950/40 transition-colors"
           >
-            <svg
-              class="w-4 h-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            >
-              <path
-                d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-              />
-              <path
-                d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
-              />
-            </svg>
-            Edit Image
+            {{ creatingShare ? "Generating..." : "Create Public Share Link" }}
           </button>
         </div>
       </div>
     </div>
 
-    <!-- Delete Confirm Dialog -->
+    <!-- Modals -->
     <ConfirmDialog
       :visible="showDeleteConfirm"
       title="Delete file?"
@@ -359,7 +290,6 @@
       @cancel="showDeleteConfirm = false"
     />
 
-    <!-- Image Editor -->
     <ImageEditor
       :visible="showEditor"
       :image-url="file?.cdnUrl || ''"
@@ -369,16 +299,14 @@
     />
   </div>
 
-  <!-- Loading -->
-  <div v-else class="flex items-center justify-center py-20">
-    <div
-      class="w-8 h-8 border-4 border-primary-200 border-t-primary-500 rounded-full animate-spin"
-    ></div>
+  <!-- Loading State -->
+  <div v-else class="flex items-center justify-center py-28">
+    <div class="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick, h } from "vue";
+import { ref, computed, onMounted, nextTick } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { filesApi, shareApi, foldersApi } from "@/api";
 import { useToast } from "@/composables/useToast";
@@ -397,8 +325,25 @@ const newFilename = ref("");
 const renameInput = ref<HTMLInputElement>();
 const shareUrl = ref("");
 const creatingShare = ref(false);
+const cdnFormat = ref<string>("direct");
+const isCopied = ref(false);
 
 const cdnBase = computed(() => (file.value ? `/cdn/${file.value.id}` : ""));
+
+const formattedCdnLink = computed(() => {
+  if (!file.value?.cdnUrl) return "";
+  if (cdnFormat.value === "markdown") {
+    return file.value.isImage
+      ? `![${file.value.originalFilename}](${file.value.cdnUrl})`
+      : `[${file.value.originalFilename}](${file.value.cdnUrl})`;
+  }
+  if (cdnFormat.value === "html") {
+    return file.value.isImage
+      ? `<img src="${file.value.cdnUrl}" alt="${file.value.originalFilename}" />`
+      : `<a href="${file.value.cdnUrl}">${file.value.originalFilename}</a>`;
+  }
+  return file.value.cdnUrl;
+});
 
 onMounted(async () => {
   try {
@@ -433,7 +378,7 @@ async function saveRename() {
     await filesApi.rename(file.value.id, newFilename.value.trim());
     file.value.originalFilename = newFilename.value.trim();
     isRenaming.value = false;
-    toast.success("File renamed");
+    toast.success("File renamed successfully");
   } catch {
     toast.error("Failed to rename file");
     isRenaming.value = false;
@@ -451,28 +396,14 @@ async function handleDelete() {
   }
 }
 
-function onEditorSaved(data: any) {
-  // Navigate to the newly created edited file
-  router.push(`/files/${data.id}`);
-}
-
-async function createShareLink() {
-  if (!file.value) return;
-  creatingShare.value = true;
-  try {
-    const { data } = await shareApi.create(file.value.id, 24);
-    shareUrl.value = `${window.location.origin}${data.url}`;
-    toast.success("Share link created");
-  } catch {
-    toast.error("Failed to create share link");
-  } finally {
-    creatingShare.value = false;
-  }
-}
-
 function copyUrl(url: string) {
+  if (!url) return;
   navigator.clipboard.writeText(url);
-  toast.success("URL copied to clipboard");
+  isCopied.value = true;
+  toast.success("Copied to clipboard");
+  setTimeout(() => {
+    isCopied.value = false;
+  }, 2500);
 }
 
 function formatSize(bytes: number): string {
@@ -485,44 +416,34 @@ function formatSize(bytes: number): string {
 }
 
 async function changeFolder() {
-  if (!file.value) return;
-  const current = file.value.folder || "/";
-  const target = window.prompt("Enter new folder path (e.g. /documents):", current);
-  if (!target || target.trim() === current) return;
-  const normalized = "/" + target.trim().replace(/^\/+|\/+$/g, "");
+  const current = file.value?.folder || "/";
+  const newFolder = window.prompt("Move to folder (e.g. /images):", current);
+  if (newFolder === null) return;
+  const sanitized = "/" + newFolder.trim().replace(/^\/+|\/+$/g, "");
   try {
-    await foldersApi.moveFile(file.value.id, normalized);
-    file.value.folder = normalized;
-    toast.success(`File moved to ${normalized}`);
+    await foldersApi.moveFile(file.value.id, sanitized);
+    file.value.folder = sanitized;
+    toast.success(`Moved to folder ${sanitized}`);
   } catch {
-    toast.error("Failed to move file");
+    toast.error("Failed to move folder");
   }
 }
 
-// File type icons
-function getFileIcon(_mimeType: string) {
-  return {
-    render: () =>
-      h(
-        "svg",
-        {
-          viewBox: "0 0 24 24",
-          fill: "none",
-          stroke: "currentColor",
-          "stroke-width": "1.5",
-          "stroke-linecap": "round",
-          "stroke-linejoin": "round",
-        },
-        [
-          h("path", {
-            d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z",
-          }),
-          h("polyline", { points: "14,2 14,8 20,8" }),
-        ],
-      ),
-  };
+async function createShareLink() {
+  creatingShare.value = true;
+  try {
+    const { data } = await shareApi.create(file.value.id);
+    shareUrl.value = `${window.location.origin}/share/${data.token}`;
+    toast.success("Public share link created");
+  } catch {
+    toast.error("Failed to create share link");
+  } finally {
+    creatingShare.value = false;
+  }
+}
+
+function onEditorSaved(newFile: any) {
+  file.value = newFile;
+  toast.success("Image edited and saved");
 }
 </script>
-
-
-
