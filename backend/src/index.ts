@@ -3,6 +3,9 @@ import cors from "@fastify/cors";
 import multipart from "@fastify/multipart";
 import jwt from "@fastify/jwt";
 import rateLimit from "@fastify/rate-limit";
+import fastifyStatic from "@fastify/static";
+import path from "path";
+import fs from "fs";
 import { config } from "./config";
 import { uploadRoutes } from "./routes/upload";
 import { fileRoutes } from "./routes/files";
@@ -87,6 +90,37 @@ async function start() {
     status: "ok",
     timestamp: new Date().toISOString(),
   }));
+
+  // Serve Frontend SPA if built public directory exists (Single-Container Production Mode)
+  const publicCandidates = [
+    path.resolve(__dirname, "../public"),
+    path.resolve(__dirname, "../../frontend/dist"),
+    path.resolve(process.cwd(), "public"),
+    path.resolve(process.cwd(), "frontend/dist"),
+  ];
+  const publicDir = publicCandidates.find((dir) => fs.existsSync(dir));
+
+  if (publicDir) {
+    app.log.info(`Serving static frontend from: ${publicDir}`);
+    await app.register(fastifyStatic, {
+      root: publicDir,
+      prefix: "/",
+      wildcard: false,
+    });
+
+    app.setNotFoundHandler((req, reply) => {
+      const url = req.raw.url || "";
+      if (
+        !url.startsWith("/api") &&
+        !url.startsWith("/cdn") &&
+        !url.startsWith("/health") &&
+        req.method === "GET"
+      ) {
+        return reply.sendFile("index.html");
+      }
+      reply.status(404).send({ error: "Not Found" });
+    });
+  }
 
   // Cleanup job - runs every hour
   setInterval(
