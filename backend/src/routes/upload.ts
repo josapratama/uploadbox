@@ -18,7 +18,7 @@ import {
   getVideoDuration,
 } from "../services/video-processor";
 import { validateFile, verifyMimeType } from "../services/file-validator";
-import { config } from "../config";
+import { config, getCdnBaseUrl } from "../config";
 import { logActivity } from "./activity";
 import { dispatchWebhook } from "../services/webhook-dispatcher";
 
@@ -139,7 +139,7 @@ export async function uploadRoutes(app: FastifyInstance) {
         mimeType: file.mimeType,
         size: file.size,
         folder: file.folder,
-        cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+        cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
       });
 
       // Generate video thumbnail if applicable
@@ -156,7 +156,7 @@ export async function uploadRoutes(app: FastifyInstance) {
         isVideo: file.isVideo,
         width: file.width,
         height: file.height,
-        cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+        cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         uploadedAt: file.uploadedAt,
       });
     },
@@ -240,7 +240,7 @@ export async function uploadRoutes(app: FastifyInstance) {
           mimeType: file.mimeType,
           size: file.size,
           folder: file.folder,
-          cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+          cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         });
 
         // Generate video thumbnail if applicable
@@ -255,7 +255,7 @@ export async function uploadRoutes(app: FastifyInstance) {
           size: file.size,
           isImage: file.isImage,
           isVideo: file.isVideo,
-          cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+          cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
           uploadedAt: file.uploadedAt,
         });
       }
@@ -452,7 +452,7 @@ export async function uploadRoutes(app: FastifyInstance) {
         filename: file.originalFilename,
         mimeType: file.mimeType,
         size: file.size,
-        cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+        cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
       });
 
       return reply.send({
@@ -462,7 +462,7 @@ export async function uploadRoutes(app: FastifyInstance) {
         size: file.size,
         isImage: file.isImage,
         isVideo: file.isVideo,
-        cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+        cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         uploadedAt: file.uploadedAt,
       });
     },
@@ -553,7 +553,7 @@ export async function uploadRoutes(app: FastifyInstance) {
           filename: file.originalFilename,
           mimeType: file.mimeType,
           size: file.size,
-          cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+          cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         });
 
         return reply.status(201).send({
@@ -563,7 +563,7 @@ export async function uploadRoutes(app: FastifyInstance) {
           size: file.size,
           isImage: file.isImage,
           isVideo: file.isVideo,
-          cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+          cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
           uploadedAt: file.uploadedAt,
         });
       } catch (err: any) {

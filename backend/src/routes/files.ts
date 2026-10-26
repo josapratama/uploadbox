@@ -3,7 +3,7 @@ import { db, schema } from "../db";
 import { eq, and, desc, asc, like, sql, ilike } from "drizzle-orm";
 import { authenticateAny } from "../middleware/auth";
 import { deleteFile as deleteStorageFile } from "../services/storage";
-import { config } from "../config";
+import { config, getCdnBaseUrl } from "../config";
 import { logActivity } from "./activity";
 import { generateVideoThumbnail } from "../services/video-processor";
 import { dispatchWebhook } from "../services/webhook-dispatcher";
@@ -97,11 +97,12 @@ export async function fileRoutes(app: FastifyInstance) {
 
     const total = countResult[0]?.count || 0;
 
+    const cdnBase = getCdnBaseUrl(request);
     const filesWithUrls = files.map((file) => ({
       ...file,
-      cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+      cdnUrl: `${cdnBase}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
       thumbnailUrl: file.isImage
-        ? `${config.cdnBaseUrl}/${file.id}/-/preview/`
+        ? `${cdnBase}/${file.id}/-/preview/`
         : file.isVideo
           ? `/api/files/${file.id}/thumbnail`
           : null,
@@ -144,6 +145,7 @@ export async function fileRoutes(app: FastifyInstance) {
 
       const file = files[0];
 
+      const cdnBase = getCdnBaseUrl(request);
       return reply.send({
         id: file.id,
         originalFilename: file.originalFilename,
@@ -156,9 +158,9 @@ export async function fileRoutes(app: FastifyInstance) {
         height: file.height,
         duration: file.duration,
         metadata: file.metadata,
-        cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+        cdnUrl: `${cdnBase}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         thumbnailUrl: file.isImage
-          ? `${config.cdnBaseUrl}/${file.id}/-/preview/`
+          ? `${cdnBase}/${file.id}/-/preview/`
           : file.isVideo
             ? `/api/files/${file.id}/thumbnail`
             : null,

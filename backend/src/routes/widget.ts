@@ -1,14 +1,15 @@
 import { FastifyInstance } from "fastify";
-import { config } from "../config";
+import { config, getCdnBaseUrl } from "../config";
 
 export async function widgetRoutes(app: FastifyInstance) {
   // Serve the embeddable upload widget JS
   app.get("/widget.js", async (request, reply) => {
+    const apiBase = getCdnBaseUrl(request).replace(/\/cdn$/, "");
     const script = `
 (function() {
   'use strict';
 
-  var UPLOADBOX_API = '${config.cdnBaseUrl.replace("/cdn", "")}';
+  var UPLOADBOX_API = '${apiBase}';
 
   function UploadBox(options) {
     this.publicKey = options.publicKey;
@@ -86,10 +87,11 @@ export async function widgetRoutes(app: FastifyInstance) {
 
   // Widget documentation endpoint
   app.get("/widget/docs", async (request, reply) => {
+    const apiBase = getCdnBaseUrl(request).replace(/\/cdn$/, "");
     return reply.send({
       usage: `
 <!-- Add to your HTML -->
-<script src="${config.cdnBaseUrl.replace("/cdn", "")}/api/widget.js"></script>
+<script src="${apiBase}/api/widget.js"></script>
 <div id="upload-widget"></div>
 <script>
   var uploader = new UploadBox({
