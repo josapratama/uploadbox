@@ -47,7 +47,7 @@ export async function runMigrations() {
         size BIGINT NOT NULL,
         storage_path TEXT NOT NULL,
         is_image BOOLEAN DEFAULT FALSE NOT NULL,
-        isVideo BOOLEAN DEFAULT FALSE NOT NULL,
+        is_video BOOLEAN DEFAULT FALSE NOT NULL,
         width INTEGER,
         height INTEGER,
         duration INTEGER,
@@ -138,6 +138,18 @@ export async function runMigrations() {
 
       -- Download tracking
       ALTER TABLE files ADD COLUMN IF NOT EXISTS download_count INTEGER DEFAULT 0 NOT NULL;
+
+      -- Video flag fix
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM information_schema.columns 
+          WHERE table_name = 'files' AND column_name = 'isvideo'
+        ) THEN
+          ALTER TABLE files RENAME COLUMN isvideo TO is_video;
+        END IF;
+      END $$;
+      ALTER TABLE files ADD COLUMN IF NOT EXISTS is_video BOOLEAN DEFAULT FALSE NOT NULL;
 
       -- Team members / collaboration
       CREATE TABLE IF NOT EXISTS project_members (
