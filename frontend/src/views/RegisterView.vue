@@ -199,7 +199,7 @@ async function handleRegister() {
       password.value,
       name.value || undefined,
     );
-    router.push("/");
+    router.push("/dashboard");
   } catch (err: any) {
     error.value = err.response?.data?.error || "Registration failed. Please try again.";
   } finally {

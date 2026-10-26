@@ -25,7 +25,7 @@
     >
       <!-- Brand Logo -->
       <div class="flex items-center justify-between px-6 py-5 border-b border-slate-100 dark:border-slate-800/80">
-        <router-link to="/" class="flex items-center gap-3 group">
+        <router-link to="/dashboard" class="flex items-center gap-3 group">
           <div
             class="flex items-center justify-center w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 text-white shadow-md shadow-indigo-500/20 group-hover:scale-105 transition-transform"
           >
@@ -290,6 +290,19 @@
             </svg>
           </router-link>
 
+          <!-- Landing page link -->
+          <router-link
+            to="/"
+            class="p-2 rounded-xl text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            title="Visit Public Website"
+          >
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10" />
+              <line x1="2" y1="12" x2="22" y2="12" />
+              <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+            </svg>
+          </router-link>
+
           <!-- Dark mode quick icon toggle -->
           <button
             @click="toggleDarkMode"
@@ -316,9 +329,9 @@
       <!-- Mobile Bottom Navigation Dock (Thumb-friendly UX for small screens) -->
       <div class="lg:hidden fixed bottom-3 left-4 right-4 z-40 bg-white/90 dark:bg-[#0f172a]/90 backdrop-blur-xl border border-slate-200/80 dark:border-slate-800/80 rounded-2xl shadow-xl px-4 py-2 flex items-center justify-around">
         <router-link
-          to="/"
+          to="/dashboard"
           class="flex flex-col items-center gap-0.5 text-[10px] font-medium"
-          :class="isActive('/') ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-500 dark:text-slate-400'"
+          :class="isActive('/dashboard') ? 'text-indigo-600 dark:text-indigo-400 font-bold' : 'text-slate-500 dark:text-slate-400'"
         >
           <component :is="IconHome" class="w-5 h-5" />
           <span>Home</span>
@@ -393,7 +406,7 @@ const currentRouteTitle = computed(() => {
 });
 
 function isActive(path: string): boolean {
-  if (path === "/") return route.path === "/";
+  if (path === "/dashboard") return route.path === "/dashboard";
   return route.path.startsWith(path);
 }
 
@@ -542,7 +555,7 @@ const IconAnalytics = {
 };
 
 const mainNavItems = [
-  { path: "/", label: "Dashboard", icon: IconHome },
+  { path: "/dashboard", label: "Dashboard", icon: IconHome },
   { path: "/upload", label: "Upload Files", icon: IconUpload },
   { path: "/files", label: "My Files", icon: IconFile },
   { path: "/groups", label: "File Groups", icon: IconFolder },

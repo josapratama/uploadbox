@@ -5,6 +5,12 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     {
+      path: "/",
+      name: "landing",
+      component: () => import("@/views/LandingView.vue"),
+      meta: { public: true },
+    },
+    {
       path: "/login",
       name: "login",
       component: () => import("@/views/LoginView.vue"),
@@ -22,7 +28,7 @@ const router = createRouter({
       meta: { requiresAuth: true },
       children: [
         {
-          path: "",
+          path: "dashboard",
           name: "dashboard",
           component: () => import("@/views/DashboardView.vue"),
         },
@@ -72,7 +78,11 @@ const router = createRouter({
       path: "/share/:token",
       name: "public-share",
       component: () => import("@/views/PublicShareView.vue"),
-      meta: { guest: true },
+      meta: { public: true },
+    },
+    {
+      path: "/:pathMatch(.*)*",
+      redirect: "/",
     },
   ],
 });
@@ -86,7 +96,7 @@ router.beforeEach((to, _from, next) => {
   if (requiresAuth && !authStore.isAuthenticated) {
     next("/login");
   } else if (isGuest && authStore.isAuthenticated) {
-    next("/");
+    next("/dashboard");
   } else {
     next();
   }
