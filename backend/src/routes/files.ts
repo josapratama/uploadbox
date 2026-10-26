@@ -5,6 +5,8 @@ import { authenticateAny } from "../middleware/auth";
 import { deleteFile as deleteStorageFile } from "../services/storage";
 import { config } from "../config";
 import { logActivity } from "./activity";
+import { generateVideoThumbnail } from "../services/video-processor";
+import { dispatchWebhook } from "../services/webhook-dispatcher";
 
 export async function fileRoutes(app: FastifyInstance) {
   // List files with pagination and filtering
@@ -70,6 +72,7 @@ export async function fileRoutes(app: FastifyInstance) {
           originalFilename: schema.files.originalFilename,
           mimeType: schema.files.mimeType,
           size: schema.files.size,
+          folder: schema.files.folder,
           isImage: schema.files.isImage,
           isVideo: schema.files.isVideo,
           width: schema.files.width,
@@ -146,6 +149,7 @@ export async function fileRoutes(app: FastifyInstance) {
         originalFilename: file.originalFilename,
         mimeType: file.mimeType,
         size: file.size,
+        folder: file.folder,
         isImage: file.isImage,
         isVideo: file.isVideo,
         width: file.width,
@@ -155,7 +159,9 @@ export async function fileRoutes(app: FastifyInstance) {
         cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         thumbnailUrl: file.isImage
           ? `${config.cdnBaseUrl}/${file.id}/-/preview/`
-          : null,
+          : file.isVideo
+            ? `/api/files/${file.id}/thumbnail`
+            : null,
         uploadedAt: file.uploadedAt,
       });
     },
@@ -232,6 +238,11 @@ export async function fileRoutes(app: FastifyInstance) {
         filename: files[0].originalFilename,
       });
 
+      dispatchWebhook(projectId, "file.deleted", {
+        id: uuid,
+        filename: files[0].originalFilename,
+      });
+
       return reply.send({ message: "File deleted", id: uuid });
     },
   );
@@ -269,6 +280,10 @@ export async function fileRoutes(app: FastifyInstance) {
             .set({ isDeleted: true, deletedAt: new Date() })
             .where(eq(schema.files.id, fileId));
           deleted.push(fileId);
+          dispatchWebhook(projectId, "file.deleted", {
+            id: fileId,
+            filename: files[0].originalFilename,
+          });
         }
       }
 
@@ -464,6 +479,11 @@ export async function fileRoutes(app: FastifyInstance) {
         filename: files[0].originalFilename,
       });
 
+      dispatchWebhook(projectId, "file.restored", {
+        id: uuid,
+        filename: files[0].originalFilename,
+      });
+
       return reply.send({ message: "File restored", id: uuid });
     },
   );
@@ -547,7 +567,6 @@ export async function fileRoutes(app: FastifyInstance) {
       const { uuid } = request.params as { uuid: string };
       const projectId = (request as any).projectId;
       const fs = await import("fs");
-      const path = await import("path");
 
       const files = await db
         .select()
@@ -561,14 +580,17 @@ export async function fileRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: "File not found" });
       }
 
-      const thumbnailPath = path.join(
-        config.storagePath,
-        "cache",
-        uuid.substring(0, 2),
-        `${uuid}_thumb.jpeg`,
+      const file = files[0];
+      if (!file.isVideo) {
+        return reply.status(400).send({ error: "File is not a video" });
+      }
+
+      const thumbnailPath = await generateVideoThumbnail(
+        file.storagePath,
+        file.id,
       );
 
-      if (!fs.existsSync(thumbnailPath)) {
+      if (!thumbnailPath || !fs.existsSync(thumbnailPath)) {
         return reply.status(404).send({ error: "Thumbnail not available" });
       }
 

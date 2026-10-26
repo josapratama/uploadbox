@@ -20,6 +20,7 @@ import {
 import { validateFile, verifyMimeType } from "../services/file-validator";
 import { config } from "../config";
 import { logActivity } from "./activity";
+import { dispatchWebhook } from "../services/webhook-dispatcher";
 
 export async function uploadRoutes(app: FastifyInstance) {
   // Direct file upload (streaming to disk - no memory buffering)
@@ -50,6 +51,8 @@ export async function uploadRoutes(app: FastifyInstance) {
       }
 
       const fileId = uuidv4();
+      const rawFolder = (data.fields?.folder as any)?.value || (request.query as any)?.folder || "/";
+      const folder = "/" + rawFolder.replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
       const ext = path.extname(data.filename).slice(1) || "";
       const mimeType =
         data.mimetype ||
@@ -118,6 +121,7 @@ export async function uploadRoutes(app: FastifyInstance) {
           width,
           height,
           duration,
+          folder: folder === "//" ? "/" : folder,
           metadata: {},
         })
         .returning();
@@ -126,6 +130,16 @@ export async function uploadRoutes(app: FastifyInstance) {
       await logActivity(projectId, "upload", file.id, null, {
         filename: file.originalFilename,
         size: file.size,
+      });
+
+      // Dispatch webhook
+      dispatchWebhook(projectId, "file.uploaded", {
+        id: file.id,
+        filename: file.originalFilename,
+        mimeType: file.mimeType,
+        size: file.size,
+        folder: file.folder,
+        cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
       });
 
       // Generate video thumbnail if applicable
@@ -217,6 +231,16 @@ export async function uploadRoutes(app: FastifyInstance) {
         await logActivity(projectId, "upload", file.id, null, {
           filename: file.originalFilename,
           size: file.size,
+        });
+
+        // Dispatch webhook
+        dispatchWebhook(projectId, "file.uploaded", {
+          id: file.id,
+          filename: file.originalFilename,
+          mimeType: file.mimeType,
+          size: file.size,
+          folder: file.folder,
+          cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         });
 
         // Generate video thumbnail if applicable
@@ -423,6 +447,14 @@ export async function uploadRoutes(app: FastifyInstance) {
         .set({ status: "completed" })
         .where(eq(schema.multipartUploads.id, uploadId));
 
+      dispatchWebhook(upload.projectId, "file.uploaded", {
+        id: file.id,
+        filename: file.originalFilename,
+        mimeType: file.mimeType,
+        size: file.size,
+        cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+      });
+
       return reply.send({
         id: file.id,
         filename: file.originalFilename,
@@ -515,6 +547,14 @@ export async function uploadRoutes(app: FastifyInstance) {
             metadata: { sourceUrl: url },
           })
           .returning();
+
+        dispatchWebhook(projectId, "file.uploaded", {
+          id: file.id,
+          filename: file.originalFilename,
+          mimeType: file.mimeType,
+          size: file.size,
+          cdnUrl: `${config.cdnBaseUrl}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
+        });
 
         return reply.status(201).send({
           id: file.id,

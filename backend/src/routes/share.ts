@@ -82,50 +82,143 @@ export async function shareRoutes(app: FastifyInstance) {
       return reply.send({ message: "Share link deleted" });
     },
   );
+  // Public share info endpoint (under /api/share)
+  app.get("/public/:token/info", async (request, reply) => {
+    const { token } = request.params as { token: string };
+    return handleShareInfo(token, reply);
+  });
+
+  // Public share download endpoint (under /api/share)
+  app.get("/public/:token/download", async (request, reply) => {
+    const { token } = request.params as { token: string };
+    return handleShareDownload(token, reply);
+  });
 }
 
-// Public share download (no auth required)
-export async function publicShareRoutes(app: FastifyInstance) {
-  app.get("/:token", async (request, reply) => {
-    const { token } = request.params as { token: string };
+// Helper to get share info
+async function handleShareInfo(token: string, reply: any) {
+  const result = await db.execute(sql`
+    SELECT sl.*, f.storage_path, f.original_filename, f.mime_type, f.size, f.is_image, f.is_video
+    FROM share_links sl
+    JOIN files f ON f.id = sl.file_id
+    WHERE sl.token = ${token} AND f.is_deleted = false
+  `);
 
+  if (result.rows.length === 0) {
+    return reply.status(404).send({ error: "Share link not found" });
+  }
+
+  const link = result.rows[0] as any;
+
+  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+    return reply.status(410).send({ error: "Share link has expired" });
+  }
+
+  if (link.max_downloads && link.download_count >= link.max_downloads) {
+    return reply.status(410).send({ error: "Download limit reached" });
+  }
+
+  return reply.send({
+    token: link.token,
+    filename: link.original_filename,
+    size: Number(link.size),
+    mimeType: link.mime_type,
+    isImage: link.is_image,
+    isVideo: link.is_video,
+    expiresAt: link.expires_at,
+    maxDownloads: link.max_downloads,
+    downloadCount: link.download_count,
+  });
+}
+
+// Helper to stream share download
+async function handleShareDownload(token: string, reply: any) {
+  const result = await db.execute(sql`
+    SELECT sl.*, f.storage_path, f.original_filename, f.mime_type, f.size
+    FROM share_links sl
+    JOIN files f ON f.id = sl.file_id
+    WHERE sl.token = ${token} AND f.is_deleted = false
+  `);
+
+  if (result.rows.length === 0) {
+    return reply.status(404).send({ error: "Share link not found" });
+  }
+
+  const link = result.rows[0] as any;
+
+  if (link.expires_at && new Date(link.expires_at) < new Date()) {
+    return reply.status(410).send({ error: "Share link has expired" });
+  }
+
+  if (link.max_downloads && link.download_count >= link.max_downloads) {
+    return reply.status(410).send({ error: "Download limit reached" });
+  }
+
+  if (!fileExists(link.storage_path)) {
+    return reply.status(404).send({ error: "File not found" });
+  }
+
+  await db.execute(
+    sql`UPDATE share_links SET download_count = download_count + 1 WHERE token = ${token}`,
+  );
+
+  const stream = fs.createReadStream(link.storage_path);
+  reply.header("Content-Type", link.mime_type || "application/octet-stream");
+  reply.header("Content-Length", link.size);
+  reply.header(
+    "Content-Disposition",
+    `attachment; filename="${encodeURIComponent(link.original_filename)}"`,
+  );
+
+  return reply.send(stream);
+}
+
+// Public share download routes (mounted at /share)
+export async function publicShareRoutes(app: FastifyInstance) {
+  // Support HEAD requests without incrementing download count
+  app.head("/:token", async (request, reply) => {
+    const { token } = request.params as { token: string };
     const result = await db.execute(sql`
-      SELECT sl.*, f.storage_path, f.original_filename, f.mime_type, f.size
+      SELECT sl.*, f.storage_path, f.mime_type, f.size
       FROM share_links sl
       JOIN files f ON f.id = sl.file_id
       WHERE sl.token = ${token} AND f.is_deleted = false
     `);
 
     if (result.rows.length === 0) {
-      return reply.status(404).send({ error: "Share link not found" });
+      return reply.status(404).send();
     }
 
     const link = result.rows[0] as any;
 
     if (link.expires_at && new Date(link.expires_at) < new Date()) {
-      return reply.status(410).send({ error: "Share link has expired" });
+      return reply.status(410).send();
     }
 
     if (link.max_downloads && link.download_count >= link.max_downloads) {
-      return reply.status(410).send({ error: "Download limit reached" });
+      return reply.status(410).send();
     }
 
-    if (!fileExists(link.storage_path)) {
-      return reply.status(404).send({ error: "File not found" });
-    }
-
-    await db.execute(
-      sql`UPDATE share_links SET download_count = download_count + 1 WHERE token = ${token}`,
-    );
-
-    const stream = fs.createReadStream(link.storage_path);
     reply.header("Content-Type", link.mime_type || "application/octet-stream");
     reply.header("Content-Length", link.size);
-    reply.header(
-      "Content-Disposition",
-      `inline; filename="${encodeURIComponent(link.original_filename)}"`,
-    );
+    return reply.status(200).send();
+  });
 
-    return reply.send(stream);
+  // Get share info
+  app.get("/:token/info", async (request, reply) => {
+    const { token } = request.params as { token: string };
+    return handleShareInfo(token, reply);
+  });
+
+  // Download shared file
+  app.get("/:token/download", async (request, reply) => {
+    const { token } = request.params as { token: string };
+    return handleShareDownload(token, reply);
+  });
+
+  // Direct token download
+  app.get("/:token", async (request, reply) => {
+    const { token } = request.params as { token: string };
+    return handleShareDownload(token, reply);
   });
 }

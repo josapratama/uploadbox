@@ -64,6 +64,10 @@ export const files = pgTable(
     height: integer("height"),
     duration: integer("duration"), // video duration in seconds
     metadata: jsonb("metadata").$type<Record<string, unknown>>(),
+    folder: varchar("folder", { length: 1024 }).default("/").notNull(),
+    version: integer("version").default(1).notNull(),
+    parentFileId: uuid("parent_file_id"),
+    downloadCount: integer("download_count").default(0).notNull(),
     isStored: boolean("is_stored").default(true).notNull(),
     isDeleted: boolean("is_deleted").default(false).notNull(),
     uploadedAt: timestamp("uploaded_at").defaultNow().notNull(),
@@ -73,6 +77,28 @@ export const files = pgTable(
     projectIdIdx: index("files_project_id_idx").on(table.projectId),
     mimeTypeIdx: index("files_mime_type_idx").on(table.mimeType),
     uploadedAtIdx: index("files_uploaded_at_idx").on(table.uploadedAt),
+    folderIdx: index("files_folder_idx").on(table.folder),
+  }),
+);
+
+export const projectMembers = pgTable(
+  "project_members",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    projectId: uuid("project_id")
+      .notNull()
+      .references(() => projects.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 20 }).default("viewer").notNull(),
+    invitedAt: timestamp("invited_at").defaultNow().notNull(),
+  },
+  (table) => ({
+    projectUserIdx: index("project_members_project_user_idx").on(
+      table.projectId,
+      table.userId,
+    ),
   }),
 );
 

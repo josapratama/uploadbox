@@ -47,10 +47,19 @@
                 {{ project.description }}
               </p>
             </div>
-            <span
-              class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-xs font-medium text-emerald-700 dark:text-emerald-400"
-              >Active</span
-            >
+            <div class="flex items-center gap-2">
+              <span
+                v-if="isProjectActive(project.id)"
+                class="inline-flex px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-900/30 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+              >Active Project</span>
+              <button
+                v-else
+                @click="setActiveProject(project)"
+                class="px-2.5 py-1 rounded-full border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors"
+              >
+                Switch to this project
+              </button>
+            </div>
           </div>
 
           <!-- API Keys section -->
@@ -198,12 +207,26 @@
 <script setup lang="ts">
 import { ref, onMounted, reactive } from "vue";
 import { projectsApi } from "@/api";
+import { useToast } from "@/composables/useToast";
 
+const toast = useToast();
 const projects = ref<any[]>([]);
 const projectKeys = ref<Record<string, any[]>>({});
 const showSecrets = reactive<Record<string, boolean>>({});
 const showCreateModal = ref(false);
 const newProject = ref({ name: "", description: "" });
+const currentProjectId = ref(localStorage.getItem("currentProjectId") || "");
+
+function isProjectActive(id: string): boolean {
+  if (currentProjectId.value) return currentProjectId.value === id;
+  return projects.value[0]?.id === id;
+}
+
+function setActiveProject(project: any) {
+  currentProjectId.value = project.id;
+  localStorage.setItem("currentProjectId", project.id);
+  toast.success(`Switched to "${project.name}"`);
+}
 
 onMounted(async () => {
   await fetchProjects();

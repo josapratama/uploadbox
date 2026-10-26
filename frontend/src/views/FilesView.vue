@@ -68,6 +68,12 @@
         {{ folder.folder === "/" ? "Root" : folder.folder.split("/").pop() }}
         ({{ folder.file_count }})
       </button>
+      <button
+        @click="promptNewFolder"
+        class="px-2.5 py-1 rounded-md text-xs font-medium border border-dashed border-slate-300 dark:border-slate-600 text-slate-500 hover:text-primary-600 hover:border-primary-400 transition-colors shrink-0"
+      >
+        + New Folder
+      </button>
     </div>
 
     <!-- Filters -->
@@ -114,6 +120,12 @@
         >{{ selectedFiles.length }} file(s) selected</span
       >
       <div class="flex gap-2">
+        <button
+          @click="showMoveModal = true"
+          class="px-3 py-1.5 rounded-lg bg-white dark:bg-[#22303c] border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
+        >
+          Move to Folder
+        </button>
         <button
           @click="handleBulkDownload"
           class="px-3 py-1.5 rounded-lg bg-white dark:bg-[#22303c] border border-slate-300 dark:border-slate-600 text-xs font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-600 transition-colors"
@@ -219,18 +231,27 @@
           </div>
         </div>
 
-        <div class="p-3">
+        <div
+          class="p-3 cursor-pointer"
+          @click="$router.push(`/files/${file.id}`)"
+        >
           <p
-            class="text-sm font-medium text-slate-900 dark:text-white truncate"
+            class="text-sm font-medium text-slate-900 dark:text-white truncate hover:text-primary-600 transition-colors"
             :title="file.originalFilename"
           >
             {{ file.originalFilename }}
           </p>
-          <div class="flex items-center gap-2 mt-1.5">
+          <div class="flex items-center gap-2 mt-1.5 flex-wrap">
             <span
               class="inline-flex px-2 py-0.5 rounded-md bg-slate-100 dark:bg-[#22303c] text-xs font-medium text-slate-600 dark:text-slate-300"
             >
               {{ file.mimeType.split("/")[1]?.toUpperCase() }}
+            </span>
+            <span
+              v-if="file.folder && file.folder !== '/'"
+              class="inline-flex px-2 py-0.5 rounded-md bg-amber-50 dark:bg-amber-900/30 text-xs font-medium text-amber-700 dark:text-amber-300"
+            >
+              📁 {{ file.folder.replace(/^\//, '') }}
             </span>
             <span class="text-xs text-slate-500 dark:text-slate-400">{{
               formatSize(file.size)
@@ -284,6 +305,49 @@
       @prev="previewPrev"
       @next="previewNext"
     />
+
+    <!-- Move to Folder Modal -->
+    <Teleport to="body">
+      <div
+        v-if="showMoveModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
+      >
+        <div
+          class="absolute inset-0 bg-black/50"
+          @click="showMoveModal = false"
+        ></div>
+        <div
+          class="relative bg-white dark:bg-[#192734] rounded-2xl shadow-xl w-full max-w-md p-6"
+        >
+          <h2 class="text-lg font-bold text-slate-900 dark:text-white mb-2">
+            Move {{ selectedFiles.length }} file(s) to folder
+          </h2>
+          <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">
+            Enter target folder path (e.g. /documents or /images/vacation)
+          </p>
+          <input
+            v-model="targetFolderPath"
+            type="text"
+            placeholder="/documents"
+            class="w-full px-4 py-2.5 rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-[#22303c] dark:text-white text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+          />
+          <div class="flex justify-end gap-3">
+            <button
+              @click="showMoveModal = false"
+              class="px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-[#22303c]"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmMoveToFolder"
+              class="px-4 py-2 rounded-lg bg-primary-500 text-white text-sm font-medium hover:bg-primary-600 transition-colors"
+            >
+              Move Files
+            </button>
+          </div>
+        </div>
+      </div>
+    </Teleport>
   </div>
 </template>
 
@@ -312,6 +376,8 @@ const previewFile = ref<any>(null);
 const previewIndex = ref(0);
 const folders = ref<any[]>([]);
 const currentFolder = ref("/");
+const showMoveModal = ref(false);
+const targetFolderPath = ref("");
 
 let debounceTimer: ReturnType<typeof setTimeout>;
 
@@ -435,6 +501,32 @@ function previewNext() {
   if (previewIndex.value < files.value.length - 1) {
     previewIndex.value++;
     previewFile.value = files.value[previewIndex.value];
+  }
+}
+function promptNewFolder() {
+  const name = window.prompt("Enter new folder name (e.g. documents):");
+  if (!name || !name.trim()) return;
+  const folderPath = "/" + name.trim().replace(/^\/+|\/+$/g, "");
+  currentFolder.value = folderPath;
+  fetchFiles();
+  toast.success(`Switched to folder ${folderPath}`);
+}
+
+async function confirmMoveToFolder() {
+  if (!targetFolderPath.value.trim() || selectedFiles.value.length === 0) return;
+  const folder = "/" + targetFolderPath.value.trim().replace(/^\/+|\/+$/g, "");
+  try {
+    for (const fileId of selectedFiles.value) {
+      await foldersApi.moveFile(fileId, folder);
+    }
+    toast.success(`Moved ${selectedFiles.value.length} file(s) to ${folder}`);
+    showMoveModal.value = false;
+    selectedFiles.value = [];
+    targetFolderPath.value = "";
+    await fetchFolders();
+    await fetchFiles();
+  } catch {
+    toast.error("Failed to move files");
   }
 }
 </script>

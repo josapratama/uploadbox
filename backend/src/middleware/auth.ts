@@ -106,17 +106,47 @@ export async function authenticateAny(
   // Try JWT first
   try {
     await request.jwtVerify();
-    // Get user's first project
     const user = request.user as any;
-    const projects = await db
-      .select()
-      .from(schema.projects)
-      .where(eq(schema.projects.userId, user.id))
-      .limit(1);
+    const projectHeader = request.headers["x-project-id"] as string;
 
-    if (projects.length > 0) {
-      (request as any).projectId = projects[0].id;
+    let selectedProject;
+
+    if (projectHeader) {
+      const found = await db
+        .select()
+        .from(schema.projects)
+        .where(
+          and(
+            eq(schema.projects.id, projectHeader),
+            eq(schema.projects.userId, user.id),
+          ),
+        )
+        .limit(1);
+      if (found.length > 0) {
+        selectedProject = found[0];
+      }
     }
+
+    if (!selectedProject) {
+      const projects = await db
+        .select()
+        .from(schema.projects)
+        .where(eq(schema.projects.userId, user.id))
+        .limit(1);
+
+      if (projects.length > 0) {
+        selectedProject = projects[0];
+      } else {
+        // Auto-create default project if user has no project
+        const [newProj] = await db
+          .insert(schema.projects)
+          .values({ name: "Default Project", userId: user.id })
+          .returning();
+        selectedProject = newProj;
+      }
+    }
+
+    (request as any).projectId = selectedProject.id;
     return;
   } catch {
     // JWT failed, try API key

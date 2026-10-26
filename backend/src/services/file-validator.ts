@@ -6,18 +6,18 @@ const SIGNATURES: Array<{ mime: string; bytes: number[]; offset?: number }> = [
   { mime: "image/png", bytes: [0x89, 0x50, 0x4e, 0x47] },
   { mime: "image/jpeg", bytes: [0xff, 0xd8, 0xff] },
   { mime: "image/gif", bytes: [0x47, 0x49, 0x46, 0x38] },
-  { mime: "image/webp", bytes: [0x52, 0x49, 0x46, 0x46], offset: 0 }, // RIFF....WEBP
+  { mime: "image/webp", bytes: [0x57, 0x45, 0x42, 0x50], offset: 8 }, // RIFF....WEBP
   { mime: "image/bmp", bytes: [0x42, 0x4d] },
   { mime: "image/tiff", bytes: [0x49, 0x49, 0x2a, 0x00] },
   { mime: "image/tiff", bytes: [0x4d, 0x4d, 0x00, 0x2a] },
   // Video
   { mime: "video/mp4", bytes: [0x66, 0x74, 0x79, 0x70], offset: 4 }, // ftyp at offset 4
   { mime: "video/webm", bytes: [0x1a, 0x45, 0xdf, 0xa3] },
-  { mime: "video/avi", bytes: [0x52, 0x49, 0x46, 0x46] },
+  { mime: "video/avi", bytes: [0x41, 0x56, 0x49, 0x20], offset: 8 }, // RIFF....AVI 
   // Audio
   { mime: "audio/mpeg", bytes: [0xff, 0xfb] },
   { mime: "audio/mpeg", bytes: [0x49, 0x44, 0x33] }, // ID3
-  { mime: "audio/wav", bytes: [0x52, 0x49, 0x46, 0x46] },
+  { mime: "audio/wav", bytes: [0x57, 0x41, 0x56, 0x45], offset: 8 }, // RIFF....WAVE
   { mime: "audio/flac", bytes: [0x66, 0x4c, 0x61, 0x43] },
   // Documents
   { mime: "application/pdf", bytes: [0x25, 0x50, 0x44, 0x46] }, // %PDF

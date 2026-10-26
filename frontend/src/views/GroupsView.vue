@@ -95,7 +95,7 @@
           </button>
         </div>
         <p class="text-xs text-slate-500 dark:text-slate-400 mt-2">
-          Created {{ new Date(group.createdAt).toLocaleDateString() }}
+          {{ group.fileCount ?? 0 }} file(s) · Created {{ new Date(group.createdAt).toLocaleDateString() }}
         </p>
       </div>
     </div>
@@ -166,6 +166,22 @@
                   {{ formatSize(file.size) }}
                 </p>
               </div>
+              <button
+                @click="removeFileFromGroup(file.id)"
+                class="p-1.5 rounded-md text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                title="Remove from group"
+              >
+                <svg
+                  class="w-4 h-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <line x1="18" y1="6" x2="6" y2="18" />
+                  <line x1="6" y1="6" x2="18" y2="18" />
+                </svg>
+              </button>
             </div>
           </div>
           <p
@@ -360,22 +376,28 @@ async function viewGroup(id: string) {
 async function addFilesToGroup() {
   if (!selectedGroup.value || selectedFileIds.value.length === 0) return;
   try {
-    // Re-create group with new files (simple approach)
-    // The backend group already has files, we add more via a new endpoint or recreate
-    await groupsApi.create(selectedGroup.value.name, [
-      ...(selectedGroup.value.files?.map((f: any) => f.id) || []),
-      ...selectedFileIds.value,
-    ]);
-    // Delete old group
-    await groupsApi.delete(selectedGroup.value.id);
-
+    await groupsApi.addFiles(selectedGroup.value.id, selectedFileIds.value);
     showAddFiles.value = false;
     selectedFileIds.value = [];
-    selectedGroup.value = null;
+    await viewGroup(selectedGroup.value.id);
     await fetchGroups();
     toast.success("Files added to group");
   } catch {
     toast.error("Failed to add files");
+  }
+}
+
+async function removeFileFromGroup(fileId: string) {
+  if (!selectedGroup.value) return;
+  try {
+    await groupsApi.removeFile(selectedGroup.value.id, fileId);
+    selectedGroup.value.files = selectedGroup.value.files.filter(
+      (f: any) => f.id !== fileId,
+    );
+    await fetchGroups();
+    toast.success("File removed from group");
+  } catch {
+    toast.error("Failed to remove file");
   }
 }
 

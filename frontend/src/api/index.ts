@@ -7,11 +7,15 @@ const api = axios.create({
   },
 });
 
-// Add auth token to requests
+// Add auth token and project ID to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("token");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  const currentProjectId = localStorage.getItem("currentProjectId");
+  if (currentProjectId) {
+    config.headers["X-Project-Id"] = currentProjectId;
   }
   return config;
 });
@@ -68,9 +72,13 @@ export const uploadApi = {
     file: File,
     onProgress?: (progress: number) => void,
     signal?: AbortSignal,
+    folder?: string,
   ) => {
     const formData = new FormData();
     formData.append("file", file);
+    if (folder) {
+      formData.append("folder", folder);
+    }
     return api.post("/upload/file", formData, {
       headers: { "Content-Type": "multipart/form-data" },
       signal,
@@ -126,6 +134,12 @@ export const groupsApi = {
     api.post("/groups", { name, fileIds }),
   get: (uuid: string) => api.get(`/groups/${uuid}`),
   delete: (uuid: string) => api.delete(`/groups/${uuid}`),
+  addFiles: (uuid: string, fileIds: string[]) =>
+    api.post(`/groups/${uuid}/files`, { fileIds }),
+  removeFile: (uuid: string, fileId: string) =>
+    api.delete(`/groups/${uuid}/files/${fileId}`),
+  rename: (uuid: string, name: string) =>
+    api.put(`/groups/${uuid}`, { name }),
 };
 
 // Webhooks API
@@ -149,6 +163,7 @@ export const shareApi = {
     api.post("/share", { fileId, expiresIn, maxDownloads }),
   listForFile: (fileId: string) => api.get(`/share/${fileId}`),
   delete: (id: string) => api.delete(`/share/${id}`),
+  getPublicInfo: (token: string) => api.get(`/share/public/${token}/info`),
 };
 
 // Analytics API

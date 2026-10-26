@@ -129,6 +129,22 @@
                 {{ formatSize(file.size) }}
               </dd>
             </div>
+            <div>
+              <dt
+                class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
+              >
+                Folder
+              </dt>
+              <dd class="mt-0.5 text-sm text-slate-900 dark:text-slate-200 flex items-center gap-2">
+                <span>{{ file.folder || "/" }}</span>
+                <button
+                  @click="changeFolder"
+                  class="text-xs font-medium text-primary-600 dark:text-primary-400 hover:underline"
+                >
+                  Change
+                </button>
+              </dd>
+            </div>
             <div v-if="file.width && file.height">
               <dt
                 class="text-xs font-medium text-slate-500 dark:text-slate-400 uppercase tracking-wide"
@@ -364,7 +380,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, h } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { filesApi, shareApi } from "@/api";
+import { filesApi, shareApi, foldersApi } from "@/api";
 import { useToast } from "@/composables/useToast";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import ImageEditor from "@/components/ImageEditor.vue";
@@ -468,8 +484,23 @@ function formatSize(bytes: number): string {
   return parseFloat((n / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }
 
+async function changeFolder() {
+  if (!file.value) return;
+  const current = file.value.folder || "/";
+  const target = window.prompt("Enter new folder path (e.g. /documents):", current);
+  if (!target || target.trim() === current) return;
+  const normalized = "/" + target.trim().replace(/^\/+|\/+$/g, "");
+  try {
+    await foldersApi.moveFile(file.value.id, normalized);
+    file.value.folder = normalized;
+    toast.success(`File moved to ${normalized}`);
+  } catch {
+    toast.error("Failed to move file");
+  }
+}
+
 // File type icons
-function getFileIcon(mimeType: string) {
+function getFileIcon(_mimeType: string) {
   return {
     render: () =>
       h(

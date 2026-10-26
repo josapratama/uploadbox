@@ -64,6 +64,18 @@
       />
     </div>
 
+    <!-- Target Folder option -->
+    <div class="mt-4 flex items-center gap-2">
+      <span class="text-xs font-medium text-slate-500 dark:text-slate-400">Target Folder:</span>
+      <input
+        v-model="targetFolder"
+        type="text"
+        placeholder="/"
+        class="px-3 py-1.5 text-xs rounded-lg border border-slate-300 dark:border-slate-600 dark:bg-[#22303c] dark:text-white w-48 focus:outline-none focus:ring-2 focus:ring-primary-500/20"
+      />
+      <span class="text-xs text-slate-400">Files will be placed in this folder</span>
+    </div>
+
     <!-- Upload from URL -->
     <div
       class="mt-6 bg-white dark:bg-[#192734] rounded-xl border border-slate-200 dark:border-slate-700/50 p-5"
@@ -266,6 +278,7 @@ const fileInput = ref<HTMLInputElement>();
 const isDragging = ref(false);
 const urlInput = ref("");
 const urlUploading = ref(false);
+const targetFolder = ref("/");
 const uploads = ref<UploadItem[]>([]);
 
 function triggerFileInput() {
@@ -325,6 +338,7 @@ async function uploadFiles(files: File[]) {
           uploadItem.progress = progress;
         },
         abortController.signal,
+        targetFolder.value,
       );
 
       uploadItem.status = "completed";

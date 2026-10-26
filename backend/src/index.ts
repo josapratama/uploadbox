@@ -18,6 +18,7 @@ import { analyticsRoutes } from "./routes/analytics";
 import { widgetRoutes } from "./routes/widget";
 import { ensureStorageDir } from "./services/storage";
 import { runCleanup } from "./services/cleanup";
+import { runMigrations } from "./db/migrate";
 
 const app = Fastify({
   logger: true,
@@ -26,6 +27,13 @@ const app = Fastify({
 
 async function start() {
   ensureStorageDir();
+
+  // Run database migrations automatically
+  try {
+    await runMigrations();
+  } catch (err) {
+    app.log.error(err, "Failed to run migrations at startup");
+  }
 
   // CORS - configurable origins
   await app.register(cors, {
