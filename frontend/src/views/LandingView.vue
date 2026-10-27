@@ -38,6 +38,9 @@
 
         <!-- Right Action CTAs -->
         <div class="hidden sm:flex items-center gap-3">
+          <!-- Language Switcher -->
+          <LanguageSwitcher :is-glass="true" />
+
           <template v-if="authStore.isAuthenticated">
             <router-link
               to="/dashboard"
@@ -674,6 +677,7 @@
 import { ref, computed } from "vue";
 import { useAuthStore } from "@/stores/auth";
 import { useToast } from "@/composables/useToast";
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 
 const authStore = useAuthStore();
 const toast = useToast();

@@ -5,14 +5,14 @@
       <div>
         <div class="flex items-center gap-2.5">
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Projects & Workspaces
+            {{ $t('projects.title') || 'Projects & Workspaces' }}
           </h1>
           <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20">
-            {{ projects.length }} active
+            {{ projects.length }} {{ $t('status.active') || 'active' }}
           </span>
         </div>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Separate environments, generate project-scoped API keys, and manage storage quotas.
+          {{ $t('projects.subtitle') || 'Separate environments, generate project-scoped API keys, and manage storage quotas.' }}
         </p>
       </div>
 
@@ -24,7 +24,7 @@
           <line x1="12" y1="5" x2="12" y2="19" />
           <line x1="5" y1="12" x2="19" y2="12" />
         </svg>
-        <span>New Project</span>
+        <span>{{ $t('projects.new_project') || 'New Project' }}</span>
       </button>
     </div>
 

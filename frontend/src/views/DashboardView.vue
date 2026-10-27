@@ -12,13 +12,13 @@
         <div class="space-y-2 max-w-xl">
           <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-white/10 backdrop-blur-md border border-white/15 text-indigo-200">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Cloud Storage System Active
+            {{ $t('status.active') }}
           </div>
           <h1 class="text-2xl sm:text-3xl lg:text-4xl font-extrabold tracking-tight">
-            Deliver assets at lightspeed.
+            {{ $t('dashboard.hero_headline') || 'Deliver assets at lightspeed.' }}
           </h1>
           <p class="text-sm sm:text-base text-indigo-100/80 font-normal leading-relaxed">
-            Upload files, generate CDN links with 1-click, and manage your media assets across all projects.
+            {{ $t('dashboard.hero_subtext') || 'Upload files, generate CDN links with 1-click, and manage your media assets across all projects.' }}
           </p>
         </div>
 
@@ -31,14 +31,14 @@
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            <span>Upload New Files</span>
+            <span>{{ $t('dashboard.upload_new_btn') || 'Upload New Files' }}</span>
           </router-link>
 
           <router-link
             to="/files"
             class="px-4 py-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-sm font-semibold border border-white/20 backdrop-blur-md transition-all"
           >
-            Browse Library
+            {{ $t('dashboard.browse_library_btn') || 'Browse Library' }}
           </router-link>
         </div>
       </div>
@@ -49,7 +49,7 @@
       <!-- Total Files -->
       <div class="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Files</span>
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ $t('dashboard.total_files') || 'Total Files' }}</span>
           <div class="w-10 h-10 rounded-xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 flex items-center justify-center">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -61,14 +61,14 @@
           <p class="text-3xl font-extrabold text-slate-900 dark:text-white">
             {{ stats.totalFiles }}
           </p>
-          <span class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">Active</span>
+          <span class="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">{{ $t('status.active') || 'Active' }}</span>
         </div>
       </div>
 
       <!-- Storage Used -->
       <div class="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Storage Used</span>
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ $t('dashboard.storage_used') || 'Storage Used' }}</span>
           <div class="w-10 h-10 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 dark:text-amber-400 flex items-center justify-center">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <ellipse cx="12" cy="5" rx="9" ry="3" />
@@ -88,7 +88,7 @@
       <!-- Images -->
       <div class="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Images</span>
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ $t('dashboard.images_count') || 'Images' }}</span>
           <div class="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 flex items-center justify-center">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
@@ -108,7 +108,7 @@
       <!-- Videos -->
       <div class="p-5 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs hover:shadow-md hover:-translate-y-0.5 transition-all">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Videos</span>
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ $t('dashboard.videos_count') || 'Videos' }}</span>
           <div class="w-10 h-10 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 flex items-center justify-center">
             <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polygon points="23,7 16,12 23,17" />
@@ -129,8 +129,8 @@
     <div class="p-6 rounded-2xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs">
       <div class="flex items-center justify-between mb-3">
         <div>
-          <h3 class="text-sm font-bold text-slate-900 dark:text-white">Storage Breakdown</h3>
-          <p class="text-xs text-slate-500 dark:text-slate-400">Total usage across all formats</p>
+          <h3 class="text-sm font-bold text-slate-900 dark:text-white">{{ $t('dashboard.storage_breakdown') || 'Storage Breakdown' }}</h3>
+          <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('analytics.total_assets_sub') || 'Total usage across all formats' }}</p>
         </div>
         <span class="text-xs font-mono font-semibold text-slate-700 dark:text-slate-300">
           {{ formatSize(stats.totalSize) }} used of 5 GB

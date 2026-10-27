@@ -5,14 +5,14 @@
       <div>
         <div class="flex items-center gap-2.5">
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            File Library
+            {{ $t('files.title') || 'File Library' }}
           </h1>
           <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-500/20">
-            {{ pagination.total }} items
+            {{ pagination.total }} {{ $t('table.results') || 'items' }}
           </span>
         </div>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Search, preview, organize, and copy direct CDN links for your assets
+          {{ $t('files.subtitle') || 'Search, preview, organize, and copy direct CDN links for your assets' }}
         </p>
       </div>
 
@@ -23,7 +23,7 @@
             @click="viewMode = 'grid'"
             class="p-1.5 rounded-lg transition-all"
             :class="viewMode === 'grid' ? 'bg-white dark:bg-[#0f172a] text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'"
-            title="Grid view"
+            :title="$t('files.grid_view') || 'Grid view'"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="3" width="7" height="7" rx="1" />
@@ -36,7 +36,7 @@
             @click="viewMode = 'list'"
             class="p-1.5 rounded-lg transition-all"
             :class="viewMode === 'list' ? 'bg-white dark:bg-[#0f172a] text-indigo-600 dark:text-indigo-400 shadow-xs' : 'text-slate-500 hover:text-slate-800 dark:hover:text-white'"
-            title="List view"
+            :title="$t('files.list_view') || 'List view'"
           >
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="8" y1="6" x2="21" y2="6" />
@@ -57,7 +57,7 @@
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          <span>Upload File</span>
+          <span>{{ $t('dashboard.upload_new_btn') || 'Upload File' }}</span>
         </router-link>
       </div>
     </div>

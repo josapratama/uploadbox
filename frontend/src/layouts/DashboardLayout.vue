@@ -79,14 +79,14 @@
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          <span>Upload Files</span>
+          <span>{{ t('dashboard.upload_new_btn') || 'Upload Files' }}</span>
         </router-link>
       </div>
 
       <!-- Navigation -->
       <nav class="flex-1 px-3 py-3 space-y-1 overflow-y-auto">
         <div class="px-3 pb-1.5 pt-2 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
-          Main Menu
+          {{ t('nav.menu') || 'Main Menu' }}
         </div>
         <router-link
           v-for="item in mainNavItems"
@@ -303,6 +303,9 @@
             </svg>
           </router-link>
 
+          <!-- Language Switcher -->
+          <LanguageSwitcher />
+
           <!-- Dark mode quick icon toggle -->
           <button
             @click="toggleDarkMode"
@@ -385,12 +388,15 @@ import { useRouter, useRoute } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { useDarkMode } from "@/composables/useDarkMode";
 import { useKeyboardShortcuts } from "@/composables/useKeyboard";
+import { useI18n } from "@/composables/useI18n";
+import LanguageSwitcher from "@/components/LanguageSwitcher.vue";
 
 const router = useRouter();
 const route = useRoute();
 const authStore = useAuthStore();
 const sidebarOpen = ref(false);
 const { isDark, toggleDarkMode } = useDarkMode();
+const { t } = useI18n();
 useKeyboardShortcuts();
 
 const userInitial = computed(() => {
@@ -554,17 +560,17 @@ const IconAnalytics = {
     ),
 };
 
-const mainNavItems = [
-  { path: "/dashboard", label: "Dashboard", icon: IconHome },
-  { path: "/upload", label: "Upload Files", icon: IconUpload },
-  { path: "/files", label: "My Files", icon: IconFile },
-  { path: "/groups", label: "File Groups", icon: IconFolder },
-];
+const mainNavItems = computed(() => [
+  { path: "/dashboard", label: t("nav.dashboard") || "Dashboard", icon: IconHome },
+  { path: "/upload", label: t("dashboard.upload_new_btn") || "Upload Files", icon: IconUpload },
+  { path: "/files", label: t("files.my_files") || "My Files", icon: IconFile },
+  { path: "/groups", label: t("groups.title") || "File Groups", icon: IconFolder },
+]);
 
-const manageNavItems = [
-  { path: "/analytics", label: "Analytics", icon: IconAnalytics },
-  { path: "/projects", label: "Projects", icon: IconFolder },
-  { path: "/trash", label: "Trash Bin", icon: IconTrash },
-  { path: "/settings", label: "Settings", icon: IconSettings },
-];
+const manageNavItems = computed(() => [
+  { path: "/analytics", label: t("analytics.title") || "Analytics", icon: IconAnalytics },
+  { path: "/projects", label: t("projects.title") || "Projects", icon: IconFolder },
+  { path: "/trash", label: t("trash.title") || "Trash Bin", icon: IconTrash },
+  { path: "/settings", label: t("settings.title") || "Settings", icon: IconSettings },
+]);
 </script>

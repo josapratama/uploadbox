@@ -5,14 +5,14 @@
       <div>
         <div class="flex items-center gap-2">
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Upload Center
+            {{ $t('upload.title') || 'Upload Center' }}
           </h1>
           <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200/60 dark:border-emerald-500/20">
             CDN Ready
           </span>
         </div>
         <p class="mt-1 text-sm text-slate-500 dark:text-slate-400">
-          Upload images, videos, audio, and documents. Direct CDN links generated instantly.
+          {{ $t('upload.max_size_hint') || 'Upload images, videos, audio, and documents. Direct CDN links generated instantly.' }}
         </p>
       </div>
 

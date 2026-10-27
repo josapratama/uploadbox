@@ -12,10 +12,10 @@
         </div>
         <div>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Usage & Analytics
+            {{ $t('analytics.title') || 'Usage & Analytics' }}
           </h1>
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Real-time storage insights, upload trends, and distribution
+            {{ $t('analytics.subtitle') || 'Real-time storage insights, upload trends, and distribution' }}
           </p>
         </div>
       </div>
@@ -23,7 +23,7 @@
       <!-- Live Indicator -->
       <div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold self-start sm:self-auto">
         <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-        Live Metrics
+        {{ $t('analytics.live_metrics') || 'Live Metrics' }}
       </div>
     </div>
 
@@ -31,7 +31,7 @@
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 relative overflow-hidden group">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Total Assets</span>
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ $t('analytics.total_assets') || 'Total Assets' }}</span>
           <div class="w-9 h-9 rounded-xl bg-blue-500/10 text-blue-500 flex items-center justify-center">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
@@ -41,12 +41,12 @@
         <p class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white mt-3">
           {{ usage.total_files || 0 }}
         </p>
-        <p class="text-[11px] text-slate-400 mt-1">Stored across all folders</p>
+        <p class="text-[11px] text-slate-400 mt-1">{{ $t('analytics.total_assets_sub') || 'Stored across all folders' }}</p>
       </div>
 
       <div class="glass-card rounded-2xl p-5 border border-slate-200/80 dark:border-slate-800/80 relative overflow-hidden group">
         <div class="flex items-center justify-between">
-          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Storage Used</span>
+          <span class="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">{{ $t('analytics.storage_used') || 'Storage Used' }}</span>
           <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-500 flex items-center justify-center">
             <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="2" y="2" width="20" height="8" rx="2" ry="2" />

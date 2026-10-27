@@ -11,10 +11,10 @@
         </div>
         <div>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Trash Bin
+            {{ $t('trash.title') || 'Trash Bin' }}
           </h1>
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Files in trash will be permanently purged after 30 days
+            {{ $t('trash.notice') || 'Files in trash will be permanently purged after 30 days' }}
           </p>
         </div>
       </div>
@@ -28,7 +28,7 @@
             <polyline points="3,6 5,6 21,6" />
             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" />
           </svg>
-          Empty Trash ({{ files.length }})
+          {{ $t('trash.empty_trash') || 'Empty Trash' }} ({{ files.length }})
         </button>
       </div>
     </div>

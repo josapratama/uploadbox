@@ -11,10 +11,10 @@
         </div>
         <div>
           <h1 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
-            Settings & Integrations
+            {{ $t('settings.title') || 'Settings & Integrations' }}
           </h1>
           <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400">
-            Manage your account preferences, security, webhooks, and developer tools
+            {{ $t('settings.subtitle') || 'Manage your account preferences, security, webhooks, and developer tools' }}
           </p>
         </div>
       </div>
