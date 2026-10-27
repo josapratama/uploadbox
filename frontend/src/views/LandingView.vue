@@ -6,7 +6,7 @@
     <div class="fixed -bottom-40 left-1/3 w-[600px] h-[600px] rounded-full bg-blue-600/15 blur-[160px] pointer-events-none"></div>
 
     <!-- Navigation Bar -->
-    <header class="sticky top-0 z-50 w-full border-b border-slate-800/80 bg-[#090d16]/80 backdrop-blur-xl transition-all">
+    <header class="fixed top-0 left-0 right-0 z-50 w-full border-b border-slate-800/80 bg-[#090d16]/90 backdrop-blur-xl transition-all">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-18 flex items-center justify-between">
         <!-- Logo -->
         <router-link to="/" class="flex items-center gap-3 group">
@@ -29,11 +29,11 @@
 
         <!-- Desktop Navigation Links -->
         <nav class="hidden md:flex items-center gap-8 text-sm font-medium text-slate-300">
-          <a href="#features" class="hover:text-white transition-colors">Features</a>
-          <a href="#playground" class="hover:text-white transition-colors">Interactive Demo</a>
-          <a href="#api" class="hover:text-white transition-colors">Developer API</a>
-          <a href="#pricing" class="hover:text-white transition-colors">Pricing</a>
-          <a href="#faq" class="hover:text-white transition-colors">FAQ</a>
+          <a href="#features" class="hover:text-white transition-colors">{{ $t('landing.features') || 'Features' }}</a>
+          <a href="#playground" class="hover:text-white transition-colors">{{ $t('landing.interactive_demo') || 'Interactive Demo' }}</a>
+          <a href="#api" class="hover:text-white transition-colors">{{ $t('landing.developer_api') || 'Developer API' }}</a>
+          <a href="#pricing" class="hover:text-white transition-colors">{{ $t('landing.pricing') || 'Pricing' }}</a>
+          <a href="#faq" class="hover:text-white transition-colors">{{ $t('landing.faq') || 'FAQ' }}</a>
         </nav>
 
         <!-- Right Action CTAs -->
@@ -46,7 +46,7 @@
               to="/dashboard"
               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all transform active:scale-95"
             >
-              <span>Go to Console</span>
+              <span>{{ $t('landing.console_btn') || 'Go to Console' }}</span>
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
@@ -58,13 +58,13 @@
               to="/login"
               class="px-4 py-2.5 rounded-xl text-sm font-semibold text-slate-300 hover:text-white hover:bg-slate-800/60 transition-colors"
             >
-              Sign In
+              {{ $t('auth.login') || 'Sign In' }}
             </router-link>
             <router-link
               to="/register"
               class="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-sm font-bold shadow-lg shadow-indigo-500/25 transition-all transform active:scale-95"
             >
-              <span>Get Started Free</span>
+              <span>{{ $t('landing.start_free') || 'Get Started Free' }}</span>
               <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="5" y1="12" x2="19" y2="12" />
                 <polyline points="12 5 19 12 12 19" />
@@ -94,18 +94,18 @@
 
       <!-- Mobile Dropdown Menu -->
       <div v-if="mobileMenuOpen" class="md:hidden border-b border-slate-800 bg-[#090d16]/95 backdrop-blur-2xl px-6 py-6 space-y-4">
-        <a @click="mobileMenuOpen = false" href="#features" class="block text-base font-medium text-slate-300 hover:text-white">Features</a>
-        <a @click="mobileMenuOpen = false" href="#playground" class="block text-base font-medium text-slate-300 hover:text-white">Interactive Demo</a>
-        <a @click="mobileMenuOpen = false" href="#api" class="block text-base font-medium text-slate-300 hover:text-white">Developer API</a>
-        <a @click="mobileMenuOpen = false" href="#pricing" class="block text-base font-medium text-slate-300 hover:text-white">Pricing</a>
-        <a @click="mobileMenuOpen = false" href="#faq" class="block text-base font-medium text-slate-300 hover:text-white">FAQ</a>
+        <a @click="mobileMenuOpen = false" href="#features" class="block text-base font-medium text-slate-300 hover:text-white">{{ $t('landing.features') || 'Features' }}</a>
+        <a @click="mobileMenuOpen = false" href="#playground" class="block text-base font-medium text-slate-300 hover:text-white">{{ $t('landing.interactive_demo') || 'Interactive Demo' }}</a>
+        <a @click="mobileMenuOpen = false" href="#api" class="block text-base font-medium text-slate-300 hover:text-white">{{ $t('landing.developer_api') || 'Developer API' }}</a>
+        <a @click="mobileMenuOpen = false" href="#pricing" class="block text-base font-medium text-slate-300 hover:text-white">{{ $t('landing.pricing') || 'Pricing' }}</a>
+        <a @click="mobileMenuOpen = false" href="#faq" class="block text-base font-medium text-slate-300 hover:text-white">{{ $t('landing.faq') || 'FAQ' }}</a>
         <div class="pt-4 border-t border-slate-800 flex flex-col gap-3">
           <template v-if="authStore.isAuthenticated">
             <router-link
               to="/dashboard"
               class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-center font-bold text-sm"
             >
-              Go to Console
+              {{ $t('landing.console_btn') || 'Go to Console' }}
             </router-link>
           </template>
           <template v-else>
@@ -113,13 +113,13 @@
               to="/login"
               class="w-full py-2.5 rounded-xl border border-slate-700 text-center text-sm font-semibold text-slate-200"
             >
-              Sign In
+              {{ $t('auth.login') || 'Sign In' }}
             </router-link>
             <router-link
               to="/register"
               class="w-full py-3 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 text-white text-center font-bold text-sm shadow-md shadow-indigo-500/25"
             >
-              Get Started Free
+              {{ $t('landing.start_free') || 'Get Started Free' }}
             </router-link>
           </template>
         </div>
@@ -127,13 +127,13 @@
     </header>
 
     <!-- Hero Section -->
-    <section class="relative pt-20 pb-28 md:pt-28 md:pb-36 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
+    <section class="relative pt-28 pb-28 md:pt-36 md:pb-36 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto text-center">
       <!-- Announcement Chip -->
       <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs sm:text-sm font-semibold mb-8 hover:bg-indigo-500/15 transition-colors cursor-default">
         <span class="w-2 h-2 rounded-full bg-indigo-400 animate-pulse"></span>
-        <span>UploadBox 2.0 is Live</span>
+        <span>{{ $t('landing.announcement_title') || 'UploadBox 2.0 is Live' }}</span>
         <span class="text-slate-500">|</span>
-        <span class="text-slate-300 font-normal">Next-Gen Media Edge Delivery</span>
+        <span class="text-slate-300 font-normal">{{ $t('landing.announcement_subtitle') || 'Next-Gen Media Edge Delivery' }}</span>
         <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="9 18 15 12 9 6" />
         </svg>
@@ -141,15 +141,15 @@
 
       <!-- Main Headline -->
       <h1 class="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-white max-w-5xl mx-auto leading-[1.12]">
-        Modern File Infrastructure &
+        {{ $t('landing.hero_title_1') || 'Modern File Infrastructure &' }}
         <span class="bg-gradient-to-r from-indigo-400 via-violet-400 to-pink-400 bg-clip-text text-transparent">
-          Smart CDN Delivery
+          {{ $t('landing.hero_title_2') || 'Smart CDN Delivery' }}
         </span>
       </h1>
 
       <!-- Subtitle -->
       <p class="mt-6 text-base sm:text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
-        Upload, transform, resize, and deliver assets globally with microsecond latency. Built for developers and modern web applications with seamless API integrations.
+        {{ $t('landing.hero_desc') || 'Upload, transform, resize, and deliver assets globally with microsecond latency. Built for developers and modern web applications with seamless API integrations.' }}
       </p>
 
       <!-- Action Buttons -->
@@ -158,7 +158,7 @@
           to="/register"
           class="w-full sm:w-auto inline-flex items-center justify-center gap-2.5 px-8 py-4 rounded-2xl bg-gradient-to-r from-indigo-600 via-indigo-500 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold text-base shadow-xl shadow-indigo-500/30 hover:shadow-indigo-500/40 hover:-translate-y-0.5 transition-all transform active:scale-95"
         >
-          <span>Start Building For Free</span>
+          <span>{{ $t('landing.start_free') || 'Start Building For Free' }}</span>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
@@ -172,7 +172,7 @@
           <svg class="w-4 h-4 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="5 3 19 12 5 21 5 3" />
           </svg>
-          <span>Live Interactive Demo</span>
+          <span>{{ $t('landing.live_demo') || 'Live Interactive Demo' }}</span>
         </a>
       </div>
 
@@ -180,19 +180,19 @@
       <div class="mt-16 grid grid-cols-2 md:grid-cols-4 gap-6 max-w-4xl mx-auto pt-10 border-t border-slate-800/60">
         <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50">
           <p class="text-2xl sm:text-3xl font-extrabold text-white"> &lt; 25ms</p>
-          <p class="text-xs text-slate-400 mt-1">Global Edge TTFB</p>
+          <p class="text-xs text-slate-400 mt-1">{{ $t('landing.metric_edge_ttfb') || 'Global Edge TTFB' }}</p>
         </div>
         <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50">
           <p class="text-2xl sm:text-3xl font-extrabold text-white">99.99%</p>
-          <p class="text-xs text-slate-400 mt-1">Uptime Availability</p>
+          <p class="text-xs text-slate-400 mt-1">{{ $t('landing.metric_uptime') || 'Uptime Availability' }}</p>
         </div>
         <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50">
           <p class="text-2xl sm:text-3xl font-extrabold text-white">WebP & AVIF</p>
-          <p class="text-xs text-slate-400 mt-1">Automatic Compression</p>
+          <p class="text-xs text-slate-400 mt-1">{{ $t('landing.metric_compression') || 'Automatic Compression' }}</p>
         </div>
         <div class="p-4 rounded-2xl bg-slate-900/40 border border-slate-800/50">
           <p class="text-2xl sm:text-3xl font-extrabold text-white">100%</p>
-          <p class="text-xs text-slate-400 mt-1">Developer-First APIs</p>
+          <p class="text-xs text-slate-400 mt-1">{{ $t('landing.metric_apis') || 'Developer-First APIs' }}</p>
         </div>
       </div>
     </section>
@@ -211,13 +211,13 @@
                 <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
                 <path d="M2 12h20" />
               </svg>
-              Smart CDN URL Engine
+              {{ $t('landing.playground_badge') || 'Smart CDN URL Engine' }}
             </div>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-white">
-              Try On-The-Fly Media Transformations
+              {{ $t('landing.playground_title') || 'Try On-The-Fly Media Transformations' }}
             </h2>
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              Select a transformation preset and watch the CDN URL directives generate in real-time.
+              {{ $t('landing.playground_desc') || 'Select a transformation preset and watch the CDN URL directives generate in real-time.' }}
             </p>
           </div>
 
@@ -307,12 +307,12 @@
     <!-- Bento Grid Features Section -->
     <section id="features" class="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Built For Performance</h2>
+        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">{{ $t('landing.features_badge') || 'Built For Performance' }}</h2>
         <p class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          Everything You Need For Media Storage & Delivery
+          {{ $t('landing.features_title') || 'Everything You Need For Media Storage & Delivery' }}
         </p>
         <p class="text-slate-400 mt-3 text-sm sm:text-base">
-          From high-throughput uploads to on-the-fly edge transformations, UploadBox handles the complex infrastructure so you can focus on building.
+          {{ $t('landing.features_desc') || 'From high-throughput uploads to on-the-fly edge transformations, UploadBox handles the complex infrastructure so you can focus on building.' }}
         </p>
       </div>
 
@@ -417,13 +417,13 @@
                 <polyline points="16 18 22 12 16 6" />
                 <polyline points="8 6 2 12 8 18" />
               </svg>
-              Developer-First
+              {{ $t('landing.api_badge') || 'Developer-First' }}
             </div>
             <h2 class="text-2xl sm:text-3xl font-extrabold text-white">
-              Integrate in Minutes With Any Tech Stack
+              {{ $t('landing.api_title') || 'Integrate in Minutes With Any Tech Stack' }}
             </h2>
             <p class="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              Use standard multipart HTTP POST or Bearer tokens to upload files from Node.js, Python, PHP, Go, or front-end widgets.
+              {{ $t('landing.api_desc') || 'Use standard multipart HTTP POST or Bearer tokens to upload files from Node.js, Python, PHP, Go, or front-end widgets.' }}
             </p>
 
             <ul class="space-y-2.5 pt-2 text-xs sm:text-sm text-slate-300">
@@ -489,12 +489,12 @@
     <!-- Pricing Section -->
     <section id="pricing" class="py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div class="text-center max-w-3xl mx-auto mb-16">
-        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Simple & Transparent</h2>
+        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">{{ $t('landing.pricing_badge') || 'Simple & Transparent' }}</h2>
         <p class="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
-          Plans Designed to Scale With You
+          {{ $t('landing.pricing_title') || 'Plans Designed to Scale With You' }}
         </p>
         <p class="text-slate-400 mt-3 text-sm sm:text-base">
-          Start for free, then scale up as your media traffic expands. No surprise overage fees.
+          {{ $t('landing.pricing_desc') || 'Start for free, then scale up as your media traffic expands. No surprise overage fees.' }}
         </p>
       </div>
 
@@ -590,8 +590,8 @@
     <!-- FAQ Section -->
     <section id="faq" class="py-20 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto">
       <div class="text-center mb-12">
-        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Got Questions?</h2>
-        <p class="text-3xl font-extrabold text-white tracking-tight">Frequently Asked Questions</p>
+        <h2 class="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">{{ $t('landing.faq_badge') || 'Got Questions?' }}</h2>
+        <p class="text-3xl font-extrabold text-white tracking-tight">{{ $t('landing.faq_title') || 'Frequently Asked Questions' }}</p>
       </div>
 
       <div class="space-y-4">
@@ -629,17 +629,17 @@
         <div class="absolute -top-24 -left-24 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
 
         <h2 class="text-3xl sm:text-5xl font-extrabold text-white tracking-tight mb-4">
-          Ready to Supercharge Your File Infrastructure?
+          {{ $t('landing.cta_title') || 'Ready to Supercharge Your File Infrastructure?' }}
         </h2>
         <p class="text-sm sm:text-base text-slate-300 max-w-2xl mx-auto mb-8">
-          Join thousands of developers and teams delivering millions of optimized assets worldwide with zero configuration headaches.
+          {{ $t('landing.cta_desc') || 'Join thousands of developers and teams delivering millions of optimized assets worldwide with zero configuration headaches.' }}
         </p>
 
         <router-link
           to="/register"
           class="inline-flex items-center gap-2.5 px-8 py-4 rounded-2xl bg-white text-slate-950 font-bold text-base shadow-xl hover:bg-slate-100 hover:scale-105 transition-all"
         >
-          <span>Create Free Account</span>
+          <span>{{ $t('landing.cta_button') || 'Create Free Account' }}</span>
           <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="5" y1="12" x2="19" y2="12" />
             <polyline points="12 5 19 12 12 19" />
@@ -659,14 +659,14 @@
             </svg>
           </div>
           <span class="font-bold text-slate-300">UploadBox CDN Platform</span>
-          <span>© 2026. All rights reserved.</span>
+          <span>© 2026. {{ $t('landing.footer_rights') || 'All rights reserved.' }}</span>
         </div>
 
         <div class="flex items-center gap-6">
-          <a href="#features" class="hover:text-slate-300 transition-colors">Features</a>
-          <a href="#api" class="hover:text-slate-300 transition-colors">API Docs</a>
-          <router-link to="/login" class="hover:text-slate-300 transition-colors">Sign In</router-link>
-          <router-link to="/register" class="hover:text-slate-300 transition-colors">Register</router-link>
+          <a href="#features" class="hover:text-slate-300 transition-colors">{{ $t('landing.features') || 'Features' }}</a>
+          <a href="#api" class="hover:text-slate-300 transition-colors">{{ $t('landing.developer_api') || 'Developer API' }}</a>
+          <router-link to="/login" class="hover:text-slate-300 transition-colors">{{ $t('auth.login') || 'Sign In' }}</router-link>
+          <router-link to="/register" class="hover:text-slate-300 transition-colors">{{ $t('landing.start_free') || 'Register' }}</router-link>
         </div>
       </div>
     </footer>

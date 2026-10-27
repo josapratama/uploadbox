@@ -68,8 +68,8 @@ export function useI18n() {
       result = resolveValue(fallbackDict, path);
     }
 
-    if (typeof result !== "string") {
-      return path; // Fallback to key if not translated
+    if (typeof result !== "string" || !result) {
+      return ""; // Returns empty string so `{{ $t('key') || 'Fallback' }}` correctly falls back
     }
 
     // Replace {variable} params

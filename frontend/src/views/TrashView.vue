@@ -41,14 +41,14 @@
         <line x1="12" y1="16" x2="12.01" y2="16" />
       </svg>
       <span>
-        Need these files back? Restoring them will instantly put them back into your main library and re-activate their CDN delivery links.
+        {{ $t('trash.restore_banner') || 'Need these files back? Restoring them will instantly put them back into your main library and re-activate their CDN delivery links.' }}
       </span>
     </div>
 
     <!-- Loading State -->
     <div v-if="loading" class="flex flex-col items-center justify-center py-24">
       <div class="w-10 h-10 border-4 border-red-500/20 border-t-red-500 rounded-full animate-spin"></div>
-      <p class="mt-4 text-xs font-medium text-slate-500 dark:text-slate-400">Loading trash bin...</p>
+      <p class="mt-4 text-xs font-medium text-slate-500 dark:text-slate-400">{{ $t('status.loading') || 'Loading trash bin...' }}</p>
     </div>
 
     <!-- Empty State -->
@@ -61,9 +61,9 @@
           <polyline points="20 6 9 17 4 12" />
         </svg>
       </div>
-      <h3 class="text-lg font-bold text-slate-900 dark:text-white">Trash is completely empty</h3>
+      <h3 class="text-lg font-bold text-slate-900 dark:text-white">{{ $t('trash.empty_title') || 'Trash is completely empty' }}</h3>
       <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-        No deleted assets here. Your workspace is tidy and clean!
+        {{ $t('trash.empty_desc') || 'No deleted assets here. Your workspace is tidy and clean!' }}
       </p>
     </div>
 
@@ -108,7 +108,7 @@
               <polyline points="9 14 4 9 9 4" />
               <path d="M20 20v-7a4 4 0 0 0-4-4H4" />
             </svg>
-            Restore
+            {{ $t('trash.restore') || 'Restore' }}
           </button>
           <button
             @click="permanentDelete(file.id)"
@@ -118,7 +118,7 @@
               <line x1="18" y1="6" x2="6" y2="18" />
               <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
-            Purge Forever
+            {{ $t('trash.purge_forever') || 'Purge Forever' }}
           </button>
         </div>
       </div>
@@ -127,9 +127,9 @@
     <!-- Confirm Empty Dialog -->
     <ConfirmDialog
       :visible="showEmptyConfirm"
-      title="Empty trash bin?"
-      message="All files in the trash bin will be permanently erased from disk. This operation is irreversible."
-      confirm-text="Permanently Delete All"
+      :title="$t('trash.confirm_empty_title') || 'Empty trash bin?'"
+      :message="$t('trash.confirm_empty_message') || 'All files in the trash bin will be permanently erased from disk. This operation is irreversible.'"
+      :confirm-text="$t('trash.confirm_empty_btn') || 'Permanently Delete All'"
       type="danger"
       @confirm="handleEmptyTrash"
       @cancel="showEmptyConfirm = false"
@@ -141,7 +141,10 @@
 import { ref, onMounted } from "vue";
 import { filesApi } from "@/api";
 import { useToast } from "@/composables/useToast";
+import { useI18n } from "@/composables/useI18n";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
+
+const { t } = useI18n();
 
 const toast = useToast();
 const files = ref<any[]>([]);
@@ -208,9 +211,9 @@ function formatDate(date: string): string {
   const now = new Date();
   const diff = now.getTime() - d.getTime();
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-  if (days === 0) return "Today";
-  if (days === 1) return "Yesterday";
-  if (days < 30) return `${days} days ago`;
+  if (days === 0) return t("time.today") || "Today";
+  if (days === 1) return t("time.yesterday") || "Yesterday";
+  if (days < 30) return t("time.days_ago", { days }) || `${days} days ago`;
   return d.toLocaleDateString();
 }
 </script>

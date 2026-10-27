@@ -49,8 +49,8 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Profile Information</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Your personal details and identity</p>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ $t('settings.profile_info') || 'Profile Information' }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('settings.profile_desc') || 'Your personal details and identity' }}</p>
           </div>
         </div>
 
@@ -58,7 +58,7 @@
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                Email Address
+                {{ $t('settings.email_address') || 'Email Address' }}
               </label>
               <input
                 :value="authStore.user?.email"
@@ -68,7 +68,7 @@
             </div>
             <div>
               <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-                Display Name
+                {{ $t('settings.display_name') || 'Display Name' }}
               </label>
               <input
                 v-model="profileName"
@@ -83,7 +83,7 @@
               type="submit"
               class="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/25 transition-all"
             >
-              Save Profile
+              {{ $t('settings.save_profile') || 'Save Profile' }}
             </button>
           </div>
         </form>
@@ -99,15 +99,15 @@
             </svg>
           </div>
           <div>
-            <h3 class="text-base font-bold text-slate-900 dark:text-white">Security & Password</h3>
-            <p class="text-xs text-slate-500 dark:text-slate-400">Update your account master password</p>
+            <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ $t('settings.security_password') || 'Security & Password' }}</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('settings.security_desc') || 'Update your account master password' }}</p>
           </div>
         </div>
 
         <form @submit.prevent="changePassword" class="space-y-4 max-w-lg">
           <div>
             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-              Current Password
+              {{ $t('settings.current_password') || 'Current Password' }}
             </label>
             <input
               v-model="currentPassword"
@@ -119,7 +119,7 @@
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider mb-1.5">
-              New Password (min 6 characters)
+              {{ $t('settings.new_password') || 'New Password (min 6 characters)' }}
             </label>
             <input
               v-model="newPassword"
@@ -135,7 +135,7 @@
               type="submit"
               class="px-5 py-2.5 rounded-xl bg-primary-500 hover:bg-primary-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-primary-500/25 transition-all"
             >
-              Update Password
+              {{ $t('settings.update_password') || 'Update Password' }}
             </button>
           </div>
         </form>
@@ -145,16 +145,16 @@
       <div class="glass-card rounded-2xl p-6 border border-red-500/30 dark:border-red-500/20 bg-red-500/5">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-base font-bold text-red-600 dark:text-red-400">Account Session</h3>
+            <h3 class="text-base font-bold text-red-600 dark:text-red-400">{{ $t('settings.account_session') || 'Account Session' }}</h3>
             <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Sign out from this device to clear cached tokens
+              {{ $t('settings.sign_out_desc') || 'Sign out from this device to clear cached tokens' }}
             </p>
           </div>
           <button
             @click="handleLogout"
             class="px-4 py-2 rounded-xl bg-red-500 hover:bg-red-600 text-white text-xs sm:text-sm font-semibold shadow-md shadow-red-500/20 transition-all"
           >
-            Sign Out
+            {{ $t('auth.logout') || 'Sign Out' }}
           </button>
         </div>
       </div>
@@ -172,8 +172,8 @@
               </svg>
             </div>
             <div>
-              <h3 class="text-base font-bold text-slate-900 dark:text-white">Active Webhooks</h3>
-              <p class="text-xs text-slate-500 dark:text-slate-400">Receive HTTP POST notifications when asset events occur</p>
+              <h3 class="text-base font-bold text-slate-900 dark:text-white">{{ $t('settings.webhooks_active') || 'Active Webhooks' }}</h3>
+              <p class="text-xs text-slate-500 dark:text-slate-400">{{ $t('settings.webhooks_desc') || 'Receive HTTP POST notifications when asset events occur' }}</p>
             </div>
           </div>
 
@@ -185,7 +185,7 @@
               <line x1="12" y1="5" x2="12" y2="19" />
               <line x1="5" y1="12" x2="19" y2="12" />
             </svg>
-            Add Endpoint
+            {{ $t('settings.add_endpoint') || 'Add Endpoint' }}
           </button>
         </div>
 
@@ -193,8 +193,8 @@
           <svg class="w-12 h-12 mx-auto text-slate-300 dark:text-slate-700 mb-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
           </svg>
-          <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">No webhooks registered</p>
-          <p class="text-xs text-slate-400 mt-1">Configure an endpoint to receive real-time events.</p>
+          <p class="text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">{{ $t('settings.no_webhooks') || 'No webhooks registered' }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ $t('settings.no_webhooks_desc') || 'Configure an endpoint to receive real-time events.' }}</p>
         </div>
 
         <div v-else class="space-y-3">
@@ -379,12 +379,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "@/stores/auth";
 import { webhooksApi, authExtApi } from "@/api";
 import { useToast } from "@/composables/useToast";
+import { useI18n } from "@/composables/useI18n";
 
+const { t } = useI18n();
 const router = useRouter();
 const authStore = useAuthStore();
 const toast = useToast();
@@ -392,12 +394,12 @@ const baseUrl = window.location.origin;
 
 const activeTab = ref<string>("account");
 
-const tabs = [
-  { id: "account", label: "Account & Security" },
-  { id: "webhooks", label: "Webhooks" },
-  { id: "api", label: "API Reference" },
-  { id: "shortcuts", label: "Shortcuts" },
-];
+const tabs = computed(() => [
+  { id: "account", label: t("settings.tab_account") || "Account & Security" },
+  { id: "webhooks", label: t("settings.tab_webhooks") || "Webhooks" },
+  { id: "api", label: t("settings.tab_api") || "API Reference" },
+  { id: "shortcuts", label: t("settings.tab_shortcuts") || "Shortcuts" },
+]);
 
 const shortcuts = [
   { label: "Upload files modal", key: "Ctrl + U" },
