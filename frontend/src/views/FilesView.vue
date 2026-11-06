@@ -51,13 +51,14 @@
 
         <router-link
           to="/upload"
-          class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white text-xs font-bold shadow-md shadow-indigo-500/25 transition-all hover:scale-[1.02]"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-xs shadow-indigo-500/20 transition-all hover:scale-[1.02]"
         >
-          <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+          <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
             <line x1="12" y1="5" x2="12" y2="19" />
             <line x1="5" y1="12" x2="19" y2="12" />
           </svg>
-          <span>{{ $t('dashboard.upload_new_btn') || 'Upload File' }}</span>
+          <span class="hidden sm:inline">{{ $t('dashboard.upload_new_btn') || 'Upload File' }}</span>
+          <span class="sm:hidden">Upload</span>
         </router-link>
       </div>
     </div>
@@ -256,18 +257,20 @@
         "
       >
         <!-- Checkbox Selection (Top Left) -->
-        <div class="absolute top-3 left-3 z-20">
-          <input
-            type="checkbox"
-            :checked="selectedFiles.includes(file.id)"
-            @change="toggleSelect(file.id)"
-            class="w-4 h-4 rounded-md border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
-          />
+        <div class="absolute top-2.5 left-2.5 z-20">
+          <label class="flex items-center justify-center w-6 h-6 rounded-lg bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200/80 dark:border-slate-700/80 shadow-xs cursor-pointer hover:scale-105 transition-transform">
+            <input
+              type="checkbox"
+              :checked="selectedFiles.includes(file.id)"
+              @change="toggleSelect(file.id)"
+              class="w-3.5 h-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500/20 cursor-pointer"
+            />
+          </label>
         </div>
 
         <!-- Thumbnail Media Container -->
         <div
-          class="aspect-4/3 bg-slate-100 dark:bg-slate-800/60 overflow-hidden flex items-center justify-center relative cursor-pointer"
+          class="aspect-4/3 bg-slate-100 dark:bg-slate-800/40 overflow-hidden flex items-center justify-center relative cursor-pointer"
           @click="openPreview(file, files.indexOf(file))"
         >
           <img

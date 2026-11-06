@@ -3,7 +3,7 @@
     <button
       @click="isOpen = !isOpen"
       type="button"
-      class="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200"
+      class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-semibold border transition-all duration-200"
       :class="
         isGlass
           ? 'bg-white/10 hover:bg-white/20 text-white border-white/20 backdrop-blur-md shadow-xs'
@@ -11,10 +11,14 @@
       "
       aria-label="Change Language"
     >
-      <span class="text-sm leading-none">{{ currentOption.flag }}</span>
-      <span class="tracking-wide">{{ currentOption.code.toUpperCase() }}</span>
+      <svg class="w-3.5 h-3.5 text-indigo-500 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10" />
+        <line x1="2" y1="12" x2="22" y2="12" />
+        <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+      </svg>
+      <span class="tracking-wider uppercase font-bold">{{ currentOption.code }}</span>
       <svg
-        class="w-3.5 h-3.5 opacity-60 transition-transform duration-200"
+        class="w-3 h-3 opacity-60 transition-transform duration-200"
         :class="{ 'rotate-180': isOpen }"
         viewBox="0 0 24 24"
         fill="none"

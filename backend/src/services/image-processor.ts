@@ -123,6 +123,9 @@ export async function processImage(
 
   if (operations.rotate) {
     pipeline = pipeline.rotate(operations.rotate);
+  } else {
+    // Automatically orient image based on EXIF Orientation tag (prevents upside-down or sideways camera photos)
+    pipeline = pipeline.rotate();
   }
 
   if (operations.flip) {
@@ -197,9 +200,14 @@ export async function getImageMetadata(
   filePath: string,
 ): Promise<{ width: number; height: number; format: string }> {
   const metadata = await sharp(filePath).metadata();
+  let width = metadata.width || 0;
+  let height = metadata.height || 0;
+  if (metadata.orientation && metadata.orientation >= 5 && metadata.orientation <= 8) {
+    [width, height] = [height, width];
+  }
   return {
-    width: metadata.width || 0,
-    height: metadata.height || 0,
+    width,
+    height,
     format: metadata.format || "unknown",
   };
 }
