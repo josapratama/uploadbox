@@ -127,6 +127,21 @@
         </label>
       </div>
 
+      <!-- Strip EXIF / Privacy Guard -->
+      <div class="flex items-center justify-between">
+        <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
+          <input
+            type="checkbox"
+            v-model="ops.stripMeta"
+            class="w-4 h-4 rounded text-primary-500 focus:ring-primary-500/20 border-slate-300 dark:border-slate-700"
+          />
+          <span class="flex items-center gap-1.5">
+            <span>Strip EXIF & GPS (Privacy Guard)</span>
+            <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-500">SAFE</span>
+          </span>
+        </label>
+      </div>
+
       <!-- Rotate -->
       <div class="flex items-center justify-between gap-3">
         <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
@@ -146,6 +161,54 @@
           <option value="180">180° Flip</option>
           <option value="270">270° Counter-clockwise</option>
         </select>
+      </div>
+
+      <!-- Watermark Overlay -->
+      <div class="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+        <div class="flex items-center justify-between gap-3">
+          <label class="flex items-center gap-2 cursor-pointer font-medium text-slate-700 dark:text-slate-300">
+            <input
+              type="checkbox"
+              v-model="ops.watermark"
+              class="w-4 h-4 rounded text-primary-500 focus:ring-primary-500/20 border-slate-300 dark:border-slate-700"
+            />
+            <span class="flex items-center gap-1.5">
+              <span>Watermark Overlay</span>
+              <span class="px-1.5 py-0.5 rounded text-[9px] font-bold bg-primary-500/10 text-primary-500">NEW</span>
+            </span>
+          </label>
+          <select
+            v-if="ops.watermark"
+            v-model="ops.watermarkPos"
+            class="px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white font-medium text-xs"
+          >
+            <option value="southeast">Bottom-Right</option>
+            <option value="southwest">Bottom-Left</option>
+            <option value="center">Center</option>
+            <option value="northeast">Top-Right</option>
+            <option value="northwest">Top-Left</option>
+          </select>
+        </div>
+        <div v-if="ops.watermark" class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+          <input
+            v-model="ops.watermarkText"
+            type="text"
+            placeholder="Watermark Text (e.g. © Josapratama)"
+            class="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-white text-xs"
+          />
+          <div class="flex items-center gap-2">
+            <span class="text-[10px] text-slate-400">Opacity:</span>
+            <input
+              v-model="ops.watermarkOpacity"
+              type="range"
+              min="10"
+              max="100"
+              step="5"
+              class="w-full h-1.5 accent-primary-500"
+            />
+            <span class="text-[11px] font-mono text-slate-400 w-8 text-right">{{ ops.watermarkOpacity }}%</span>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -202,6 +265,11 @@ const ops = reactive({
   grayscale: false,
   rotate: false,
   rotateVal: "90",
+  stripMeta: false,
+  watermark: false,
+  watermarkText: "© UploadBox",
+  watermarkPos: "southeast",
+  watermarkOpacity: 80,
 });
 
 const generatedUrl = computed(() => {
@@ -213,7 +281,13 @@ const generatedUrl = computed(() => {
   if (ops.quality) parts.push(`-/quality/${ops.qualityVal}`);
   if (ops.blur) parts.push(`-/blur/${ops.blurVal}`);
   if (ops.grayscale) parts.push(`-/grayscale`);
+  if (ops.stripMeta) parts.push(`-/strip_meta`);
   if (ops.rotate) parts.push(`-/rotate/${ops.rotateVal}`);
+  if (ops.watermark && ops.watermarkText.trim()) {
+    parts.push(
+      `-/watermark/${encodeURIComponent(ops.watermarkText.trim())}/${ops.watermarkPos}/${ops.watermarkOpacity}`,
+    );
+  }
 
   if (parts.length === 0) {
     return `${window.location.origin}${base}/${actualFilename.value}`;

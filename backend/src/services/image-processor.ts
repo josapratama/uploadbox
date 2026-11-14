@@ -2,6 +2,7 @@ import sharp from "sharp";
 import path from "path";
 import fs from "fs";
 import { getCachePath, fileExists } from "./storage";
+import { parseExifBuffer, ExifData } from "./exif";
 
 export interface ImageOperations {
   resize?: {
@@ -19,6 +20,12 @@ export interface ImageOperations {
   flip?: boolean;
   flop?: boolean;
   preview?: boolean;
+  stripMeta?: boolean;
+  watermark?: {
+    text: string;
+    position?: "southeast" | "southwest" | "northeast" | "northwest" | "center";
+    opacity?: number;
+  };
 }
 
 export function parseOperationsFromUrl(operationsStr: string): ImageOperations {
@@ -93,6 +100,28 @@ export function parseOperationsFromUrl(operationsStr: string): ImageOperations {
         ops.quality = 80;
         break;
       }
+      case "watermark": {
+        let text = "UploadBox";
+        try {
+          text = decodeURIComponent(segments[1] || "UploadBox");
+        } catch {
+          text = segments[1] || "UploadBox";
+        }
+        const posRaw = (segments[2] || "southeast").toLowerCase();
+        const validPositions: Array<NonNullable<ImageOperations["watermark"]>["position"]> = [
+          "southeast", "southwest", "northeast", "northwest", "center"
+        ];
+        const position = validPositions.includes(posRaw as any)
+          ? (posRaw as NonNullable<ImageOperations["watermark"]>["position"])
+          : "southeast";
+        const opacity = Math.min(100, Math.max(10, parseInt(segments[3] || "80", 10)));
+        ops.watermark = { text, position, opacity };
+        break;
+      }
+      case "strip_meta": {
+        ops.stripMeta = true;
+        break;
+      }
     }
   }
 
@@ -124,7 +153,7 @@ export async function processImage(
   if (operations.rotate) {
     pipeline = pipeline.rotate(operations.rotate);
   } else {
-    // Automatically orient image based on EXIF Orientation tag (prevents upside-down or sideways camera photos)
+    // Automatically orient image based on EXIF Orientation tag
     pipeline = pipeline.rotate();
   }
 
@@ -166,6 +195,75 @@ export async function processImage(
     pipeline = pipeline.grayscale();
   }
 
+  // Apply on-the-fly watermark if specified
+  if (operations.watermark && operations.watermark.text) {
+    // Get intermediate metadata to size the watermark proportionally
+    const tempBuffer = await pipeline.toBuffer({ resolveWithObject: true });
+    const imgWidth = tempBuffer.info.width;
+    const imgHeight = tempBuffer.info.height;
+
+    const wmText = operations.watermark.text.trim();
+    const position = operations.watermark.position || "southeast";
+    const opacity = (operations.watermark.opacity || 80) / 100;
+
+    // Font size relative to image width (between 14px and 72px)
+    const fontSize = Math.max(14, Math.min(72, Math.round(imgWidth / 24)));
+    const padding = Math.max(12, Math.round(fontSize * 0.8));
+
+    let posX = imgWidth - padding;
+    let posY = imgHeight - padding;
+    let textAnchor = "end";
+
+    if (position === "center") {
+      posX = Math.round(imgWidth / 2);
+      posY = Math.round(imgHeight / 2) + Math.round(fontSize / 3);
+      textAnchor = "middle";
+    } else if (position === "southwest") {
+      posX = padding;
+      posY = imgHeight - padding;
+      textAnchor = "start";
+    } else if (position === "northwest") {
+      posX = padding;
+      posY = padding + fontSize;
+      textAnchor = "start";
+    } else if (position === "northeast") {
+      posX = imgWidth - padding;
+      posY = padding + fontSize;
+      textAnchor = "end";
+    }
+
+    const escapedText = wmText
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&apos;");
+
+    const svgWatermark = `
+      <svg width="${imgWidth}" height="${imgHeight}" xmlns="http://www.w3.org/2000/svg">
+        <style>
+          .wm-label {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: ${fontSize}px;
+            font-weight: 700;
+            fill: rgba(255, 255, 255, ${opacity});
+            stroke: rgba(0, 0, 0, ${Math.min(1, opacity * 0.9)});
+            stroke-width: ${Math.max(1, Math.round(fontSize / 14))}px;
+            paint-order: stroke fill;
+          }
+        </style>
+        <text x="${posX}" y="${posY}" text-anchor="${textAnchor}" class="wm-label">${escapedText}</text>
+      </svg>
+    `;
+
+    pipeline = sharp(tempBuffer.data).composite([
+      {
+        input: Buffer.from(svgWatermark),
+        blend: "over",
+      },
+    ]);
+  }
+
   // Output format
   const quality = operations.quality || 85;
 
@@ -198,16 +296,26 @@ export async function processImage(
 
 export async function getImageMetadata(
   filePath: string,
-): Promise<{ width: number; height: number; format: string }> {
+): Promise<{ width: number; height: number; format: string; exif?: ExifData }> {
   const metadata = await sharp(filePath).metadata();
   let width = metadata.width || 0;
   let height = metadata.height || 0;
   if (metadata.orientation && metadata.orientation >= 5 && metadata.orientation <= 8) {
     [width, height] = [height, width];
   }
+  let exif: ExifData | undefined;
+  if (metadata.exif && Buffer.isBuffer(metadata.exif)) {
+    try {
+      exif = parseExifBuffer(metadata.exif);
+    } catch {
+      // Ignore EXIF parsing error
+    }
+  }
+
   return {
     width,
     height,
     format: metadata.format || "unknown",
+    exif,
   };
 }

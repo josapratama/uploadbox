@@ -551,7 +551,10 @@ async function handleUrlUpload() {
   uploads.value.unshift(uploadItem);
 
   try {
-    const { data } = await uploadApi.fromUrl(urlInput.value);
+    const { data } = await uploadApi.fromUrl({
+      url: urlInput.value,
+      folder: targetFolder.value,
+    });
     uploadItem.status = "completed";
     uploadItem.progress = 100;
     uploadItem.filename = data.filename;

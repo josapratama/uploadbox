@@ -176,9 +176,9 @@
           </button>
           <button
             @click="handleBulkDownload"
-            class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold transition-colors"
+            class="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-semibold transition-colors flex items-center gap-1.5"
           >
-            Download TAR
+            <span>📦 Download ZIP</span>
           </button>
           <button
             @click="handleBatchDelete"
@@ -628,7 +628,7 @@ async function handleBulkDownload() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "uploadbox-files.tar";
+    a.download = "uploadbox-archive.zip";
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Download started");

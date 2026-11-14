@@ -3,11 +3,11 @@ import { db, schema } from "../db";
 import { eq, and, inArray } from "drizzle-orm";
 import { authenticateAny } from "../middleware/auth";
 import { fileExists } from "../services/storage";
+import { streamZipArchive } from "../services/zip-stream";
 import fs from "fs";
 
 export async function downloadRoutes(app: FastifyInstance) {
-  // Bulk download as concatenated files with tar-like format
-  // For simplicity, we'll create a simple zip-like response
+  // Bulk download as genuine streaming ZIP archive
   app.post(
     "/download-zip",
     { preHandler: [authenticateAny] },
@@ -19,7 +19,7 @@ export async function downloadRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: "fileIds array is required" });
       }
 
-      // Get files
+      // Get files from database
       const files = await db
         .select()
         .from(schema.files)
@@ -35,7 +35,7 @@ export async function downloadRoutes(app: FastifyInstance) {
         return reply.status(404).send({ error: "No files found" });
       }
 
-      // For single file, just redirect to CDN
+      // Single file download directly
       if (files.length === 1) {
         const file = files[0];
         if (!fileExists(file.storagePath)) {
@@ -50,83 +50,39 @@ export async function downloadRoutes(app: FastifyInstance) {
         return reply.send(stream);
       }
 
-      // For multiple files, create a tar.gz archive
-      // Using a simple approach: send files as multipart or use archiver
-      // Since we don't have archiver, let's use a simple approach
-      reply.header("Content-Type", "application/x-tar");
-      reply.header(
-        "Content-Disposition",
-        'attachment; filename="uploadbox-files.tar"',
-      );
+      // Multiple files: Stream standard ZIP archive directly to response
+      const filesToArchive = files
+        .filter((f) => fileExists(f.storagePath))
+        .map((f) => ({
+          storagePath: f.storagePath,
+          filename: f.originalFilename,
+        }));
 
-      // Simple TAR format
-      const chunks: Buffer[] = [];
-
-      for (const file of files) {
-        if (!fileExists(file.storagePath)) continue;
-
-        const stats = await fs.promises.stat(file.storagePath);
-        const content = await fs.promises.readFile(file.storagePath);
-
-        // TAR header (512 bytes)
-        const header = Buffer.alloc(512);
-        const filename = file.originalFilename.substring(0, 100);
-
-        // Name
-        header.write(filename, 0, Math.min(filename.length, 100), "utf8");
-        // Mode
-        header.write("0000644\0", 100, 8, "utf8");
-        // UID
-        header.write("0001000\0", 108, 8, "utf8");
-        // GID
-        header.write("0001000\0", 116, 8, "utf8");
-        // Size (octal)
-        header.write(
-          stats.size.toString(8).padStart(11, "0") + "\0",
-          124,
-          12,
-          "utf8",
-        );
-        // Mtime (octal)
-        header.write(
-          Math.floor(stats.mtimeMs / 1000)
-            .toString(8)
-            .padStart(11, "0") + "\0",
-          136,
-          12,
-          "utf8",
-        );
-        // Checksum placeholder
-        header.write("        ", 148, 8, "utf8");
-        // Type flag (regular file)
-        header.write("0", 156, 1, "utf8");
-
-        // Calculate checksum
-        let checksum = 0;
-        for (let i = 0; i < 512; i++) {
-          checksum += header[i];
-        }
-        header.write(
-          checksum.toString(8).padStart(6, "0") + "\0 ",
-          148,
-          8,
-          "utf8",
-        );
-
-        chunks.push(header);
-        chunks.push(content);
-
-        // Pad to 512-byte boundary
-        const remainder = content.length % 512;
-        if (remainder > 0) {
-          chunks.push(Buffer.alloc(512 - remainder));
-        }
+      if (filesToArchive.length === 0) {
+        return reply.status(404).send({ error: "No files found on storage" });
       }
 
-      // End of archive (two 512-byte blocks of zeros)
-      chunks.push(Buffer.alloc(1024));
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+      const zipFilename = `uploadbox-archive-${timestamp}.zip`;
 
-      return reply.send(Buffer.concat(chunks));
+      reply.raw.writeHead(200, {
+        "Content-Type": "application/zip",
+        "Content-Disposition": `attachment; filename="${zipFilename}"`,
+        "Transfer-Encoding": "chunked",
+        "Cache-Control": "no-cache",
+      });
+
+      try {
+        await streamZipArchive(filesToArchive, reply.raw);
+        reply.raw.end();
+      } catch (err: any) {
+        app.log.error(err, "Failed to stream ZIP archive");
+        if (!reply.raw.headersSent) {
+          reply.status(500).send({ error: "Failed to generate ZIP archive" });
+        } else {
+          reply.raw.destroy();
+        }
+      }
     },
   );
 }

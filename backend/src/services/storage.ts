@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import crypto from "crypto";
 import { config } from "../config";
 import { v4 as uuidv4 } from "uuid";
 
@@ -79,6 +80,44 @@ export async function saveStream(
     stream.pipe(writeStream);
     writeStream.on("finish", () => resolve(filePath));
     writeStream.on("error", reject);
+  });
+}
+
+export async function saveStreamWithHash(
+  stream: NodeJS.ReadableStream,
+  fileId: string,
+  extension?: string,
+): Promise<{ storagePath: string; sha256: string; size: number }> {
+  const filePath = getFilePath(fileId, extension);
+  const writeStream = fs.createWriteStream(filePath);
+  const hash = crypto.createHash("sha256");
+  let size = 0;
+
+  return new Promise((resolve, reject) => {
+    stream.on("data", (chunk: Buffer) => {
+      hash.update(chunk);
+      size += chunk.length;
+    });
+
+    stream.pipe(writeStream);
+
+    writeStream.on("finish", () => {
+      const sha256 = hash.digest("hex");
+      resolve({ storagePath: filePath, sha256, size });
+    });
+
+    writeStream.on("error", reject);
+    stream.on("error", reject);
+  });
+}
+
+export async function getFileSha256(filePath: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const hash = crypto.createHash("sha256");
+    const stream = fs.createReadStream(filePath);
+    stream.on("data", (chunk) => hash.update(chunk));
+    stream.on("end", () => resolve(hash.digest("hex")));
+    stream.on("error", reject);
   });
 }
 

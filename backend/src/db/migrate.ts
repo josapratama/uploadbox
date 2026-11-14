@@ -132,6 +132,10 @@ export async function runMigrations() {
       ALTER TABLE files ADD COLUMN IF NOT EXISTS folder VARCHAR(1024) DEFAULT '/' NOT NULL;
       CREATE INDEX IF NOT EXISTS files_folder_idx ON files(folder);
 
+      -- SHA-256 Checksum & Deduplication
+      ALTER TABLE files ADD COLUMN IF NOT EXISTS sha256 VARCHAR(64);
+      CREATE INDEX IF NOT EXISTS files_sha256_idx ON files(sha256);
+
       -- File versioning
       ALTER TABLE files ADD COLUMN IF NOT EXISTS version INTEGER DEFAULT 1 NOT NULL;
       ALTER TABLE files ADD COLUMN IF NOT EXISTS parent_file_id UUID REFERENCES files(id) ON DELETE SET NULL;

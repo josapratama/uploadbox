@@ -77,7 +77,7 @@
         </div>
 
         <!-- Download Action Button -->
-        <div>
+        <div class="space-y-2.5">
           <a
             :href="downloadUrl"
             download
@@ -90,6 +90,20 @@
             </svg>
             Download Asset
           </a>
+
+          <button
+            @click="showQrModal = true"
+            type="button"
+            class="w-full py-2.5 rounded-xl border border-white/10 hover:bg-white/5 text-slate-300 text-xs font-semibold transition-colors flex items-center justify-center gap-2"
+          >
+            <svg class="w-4 h-4 text-primary-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
+            <span>Scan QR on Mobile</span>
+          </button>
         </div>
 
         <p class="text-[11px] text-slate-500 mt-4">
@@ -97,6 +111,14 @@
         </p>
       </div>
     </main>
+
+    <QrCodeModal
+      :visible="showQrModal"
+      :url="currentShareUrl"
+      :filename="fileInfo?.filename || 'shared-file'"
+      title="Scan to Open Shared Link"
+      @close="showQrModal = false"
+    />
 
     <!-- Footer -->
     <footer class="w-full max-w-5xl mx-auto text-center z-10 py-4 text-xs text-slate-500">
@@ -109,13 +131,16 @@
 import { ref, onMounted, computed } from "vue";
 import { useRoute } from "vue-router";
 import { shareApi } from "@/api";
+import QrCodeModal from "@/components/QrCodeModal.vue";
 
 const route = useRoute();
 const loading = ref(true);
 const error = ref("");
 const fileInfo = ref<any>(null);
+const showQrModal = ref(false);
 const token = computed(() => route.params.token as string);
 const downloadUrl = computed(() => `/api/share/public/${token.value}/download`);
+const currentShareUrl = computed(() => typeof window !== "undefined" ? window.location.href : "");
 
 onMounted(async () => {
   try {

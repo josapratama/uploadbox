@@ -8,6 +8,8 @@ import { db, schema } from "../db";
 import { authenticateAny } from "../middleware/auth";
 import {
   saveStream,
+  saveStreamWithHash,
+  getFileSha256,
   getMultipartDir,
   getFilePath,
   getFileSize,
@@ -21,6 +23,7 @@ import { validateFile, verifyMimeType } from "../services/file-validator";
 import { config, getCdnBaseUrl } from "../config";
 import { logActivity } from "./activity";
 import { dispatchWebhook } from "../services/webhook-dispatcher";
+import fetch from "node-fetch";
 
 export async function uploadRoutes(app: FastifyInstance) {
   // Direct file upload (streaming to disk - no memory buffering)
@@ -67,9 +70,12 @@ export async function uploadRoutes(app: FastifyInstance) {
         return reply.status(400).send({ error: validation.reason });
       }
 
-      // Stream directly to disk (no memory buffering for large files)
-      const storagePath = await saveStream(data.file, fileId, ext);
-      const size = await getFileSize(storagePath);
+      // Stream directly to disk and calculate SHA-256 simultaneously (zero extra memory buffer)
+      const { storagePath, sha256, size } = await saveStreamWithHash(
+        data.file,
+        fileId,
+        ext,
+      );
 
       // Verify MIME type matches content
       const mimeValid = await verifyMimeType(storagePath, mimeType);
@@ -80,15 +86,32 @@ export async function uploadRoutes(app: FastifyInstance) {
           .send({ error: "File content does not match declared type" });
       }
 
+      // Check if file is a duplicate within this project
+      const [existingDuplicate] = await db
+        .select({ id: schema.files.id, originalFilename: schema.files.originalFilename })
+        .from(schema.files)
+        .where(
+          and(
+            eq(schema.files.projectId, projectId),
+            eq(schema.files.sha256, sha256),
+            eq(schema.files.isDeleted, false),
+          ),
+        )
+        .limit(1);
+
       // Get image metadata if applicable
       let width: number | null = null;
       let height: number | null = null;
+      const fileMetadata: Record<string, unknown> = {};
 
       if (isImage) {
         try {
           const meta = await getImageMetadata(storagePath);
           width = meta.width;
           height = meta.height;
+          if (meta.exif) {
+            fileMetadata.exif = meta.exif;
+          }
         } catch {
           // Non-critical
         }
@@ -121,8 +144,14 @@ export async function uploadRoutes(app: FastifyInstance) {
           width,
           height,
           duration,
+          sha256,
           folder: folder === "//" ? "/" : folder,
-          metadata: {},
+          metadata: {
+            ...fileMetadata,
+            ...(existingDuplicate
+              ? { is_duplicate: true, duplicate_of: existingDuplicate.id }
+              : {}),
+          },
         })
         .returning();
 
@@ -159,6 +188,184 @@ export async function uploadRoutes(app: FastifyInstance) {
         cdnUrl: `${getCdnBaseUrl(request)}/${file.id}/${encodeURIComponent(file.originalFilename)}`,
         uploadedAt: file.uploadedAt,
       });
+    },
+  );
+
+  // Upload file directly by fetching from a remote URL (Remote Ingestion)
+  app.post(
+    "/from-url",
+    { preHandler: [authenticateAny] },
+    async (request, reply) => {
+      const projectId = (request as any).projectId;
+
+      const quotaCheck = await checkQuota(projectId);
+      if (!quotaCheck.ok) {
+        return reply.status(413).send({
+          error: "Storage quota exceeded",
+          used: quotaCheck.used,
+          quota: quotaCheck.quota,
+        });
+      }
+
+      const { url, folder: rawFolder = "/", filename: userFilename } = (request.body || {}) as {
+        url?: string;
+        folder?: string;
+        filename?: string;
+      };
+
+      if (!url || typeof url !== "string" || !url.match(/^https?:\/\//i)) {
+        return reply.status(400).send({ error: "Valid HTTP or HTTPS URL is required" });
+      }
+
+      try {
+        const fetchRes = await fetch(url, {
+          headers: {
+            "User-Agent": "UploadBox-Ingest/1.0 (+https://uploadbox.josapratama.com)",
+          },
+          signal: AbortSignal.timeout(30000), // 30s timeout
+        });
+
+        if (!fetchRes.ok || !fetchRes.body) {
+          return reply.status(400).send({
+            error: `Failed to download from URL: HTTP ${fetchRes.status} ${fetchRes.statusText}`,
+          });
+        }
+
+        const contentType = fetchRes.headers.get("content-type") || "application/octet-stream";
+        const cleanMime = contentType.split(";")[0].trim().toLowerCase();
+
+        // Determine filename
+        let filename = userFilename?.trim();
+        if (!filename) {
+          try {
+            const parsedUrl = new URL(url);
+            const pathBase = path.basename(parsedUrl.pathname);
+            if (pathBase && pathBase.includes(".")) {
+              filename = decodeURIComponent(pathBase);
+            }
+          } catch {}
+        }
+        if (!filename) {
+          const defaultExt = mime.extension(cleanMime) || "bin";
+          filename = `imported-${Date.now()}.${defaultExt}`;
+        }
+
+        const ext = path.extname(filename).slice(1) || (mime.extension(cleanMime) || "bin");
+        const fileId = uuidv4();
+        const folder = "/" + rawFolder.replace(/^\/+|\/+$/g, "").replace(/\/+/g, "/");
+        const isImage = cleanMime.startsWith("image/");
+        const isVideo = cleanMime.startsWith("video/");
+
+        // Stream body directly to disk and calculate SHA-256
+        const { storagePath, sha256, size } = await saveStreamWithHash(
+          fetchRes.body as any,
+          fileId,
+          ext,
+        );
+
+        if (size === 0) {
+          await fs.promises.unlink(storagePath).catch(() => {});
+          return reply.status(400).send({ error: "Downloaded file is empty (0 bytes)" });
+        }
+
+        // Check duplicate within project
+        const [existingDuplicate] = await db
+          .select({ id: schema.files.id, originalFilename: schema.files.originalFilename })
+          .from(schema.files)
+          .where(
+            and(
+              eq(schema.files.projectId, projectId),
+              eq(schema.files.sha256, sha256),
+              eq(schema.files.isDeleted, false),
+            ),
+          )
+          .limit(1);
+
+        let width: number | null = null;
+        let height: number | null = null;
+        const fileMetadata: Record<string, unknown> = {
+          imported_from_url: url,
+        };
+
+        if (isImage) {
+          try {
+            const meta = await getImageMetadata(storagePath);
+            width = meta.width;
+            height = meta.height;
+            if (meta.exif) {
+              fileMetadata.exif = meta.exif;
+            }
+          } catch {}
+        }
+
+        let duration: number | null = null;
+        if (isVideo) {
+          try {
+            duration = await getVideoDuration(storagePath);
+            generateVideoThumbnail(storagePath, fileId).catch(() => {});
+          } catch {}
+        }
+
+        const [file] = await db
+          .insert(schema.files)
+          .values({
+            id: fileId,
+            projectId,
+            originalFilename: filename,
+            mimeType: cleanMime,
+            size,
+            storagePath,
+            isImage,
+            isVideo,
+            width,
+            height,
+            duration,
+            sha256,
+            folder: folder === "//" ? "/" : folder,
+            metadata: {
+              ...fileMetadata,
+              ...(existingDuplicate
+                ? { is_duplicate: true, duplicate_of: existingDuplicate.id }
+                : {}),
+            },
+          })
+          .returning();
+
+        await logActivity(projectId, "upload", file.id, null, {
+          filename: file.originalFilename,
+          size: file.size,
+          source: "url",
+          sourceUrl: url,
+        });
+
+        dispatchWebhook(projectId, "file.uploaded", {
+          id: file.id,
+          filename: file.originalFilename,
+          mimeType: file.mimeType,
+          size: file.size,
+          source: "url",
+        });
+
+        const cdnBase = getCdnBaseUrl(request);
+        const cdnUrl = `${cdnBase}/${file.id}/${encodeURIComponent(file.originalFilename)}`;
+
+        return reply.status(201).send({
+          id: file.id,
+          filename: file.originalFilename,
+          mimeType: file.mimeType,
+          size: file.size,
+          isImage: file.isImage,
+          isVideo: file.isVideo,
+          width: file.width,
+          height: file.height,
+          cdnUrl,
+          uploadedAt: file.uploadedAt,
+        });
+      } catch (err: any) {
+        return reply.status(500).send({
+          error: `Remote import error: ${err.message || err}`,
+        });
+      }
     },
   );
 
@@ -411,6 +618,7 @@ export async function uploadRoutes(app: FastifyInstance) {
 
       // Get file info
       const size = await getFileSize(finalPath);
+      const sha256 = await getFileSha256(finalPath);
       const isImage = upload.mimeType.startsWith("image/");
       const isVideo = upload.mimeType.startsWith("video/");
 
@@ -434,6 +642,7 @@ export async function uploadRoutes(app: FastifyInstance) {
           mimeType: upload.mimeType,
           size,
           storagePath: finalPath,
+          sha256,
           isImage,
           isVideo,
           width,

@@ -12,10 +12,12 @@
     "start": "vite preview --port 3000 --host"
   },
   "dependencies": {
-    "vue": "^3.4.38",
-    "vue-router": "^4.4.3",
+    "@types/qrcode": "^1.5.6",
+    "axios": "^1.7.5",
     "pinia": "^2.2.2",
-    "axios": "^1.7.5"
+    "qrcode": "^1.5.4",
+    "vue": "^3.4.38",
+    "vue-router": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.0",

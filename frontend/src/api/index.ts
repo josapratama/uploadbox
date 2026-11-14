@@ -59,6 +59,12 @@ export const filesApi = {
   quota: () => api.get("/files/stats/quota"),
   downloadZip: (fileIds: string[]) =>
     api.post("/files/download-zip", { fileIds }, { responseType: "blob" }),
+  storageBreakdown: () => api.get("/files/storage-breakdown"),
+  purgeCache: () => api.post("/files/purge-cache"),
+  getSignedUrl: (
+    uuid: string,
+    data?: { expiresInSeconds?: number; operations?: string },
+  ) => api.post(`/files/${uuid}/signed-url`, data || {}),
   // Trash
   listTrash: () => api.get("/files/trash/list"),
   restore: (uuid: string) => api.post(`/files/${uuid}/restore`),
@@ -108,7 +114,12 @@ export const uploadApi = {
       },
     });
   },
-  fromUrl: (url: string) => api.post("/upload/from-url", { url }),
+  fromUrl: (
+    data: string | { url: string; folder?: string; filename?: string },
+  ) => {
+    const payload = typeof data === "string" ? { url: data } : data;
+    return api.post("/upload/from-url", payload);
+  },
 };
 
 // Projects API

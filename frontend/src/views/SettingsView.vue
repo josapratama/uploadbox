@@ -160,6 +160,11 @@
       </div>
     </div>
 
+    <!-- Storage & CDN Cache Tab -->
+    <div v-show="activeTab === 'storage'" class="space-y-6">
+      <StorageHygieneCard />
+    </div>
+
     <!-- Webhooks Tab -->
     <div v-show="activeTab === 'webhooks'" class="space-y-6">
       <div class="glass-card rounded-2xl p-6 border border-slate-200/80 dark:border-slate-800/80">
@@ -385,6 +390,7 @@ import { useAuthStore } from "@/stores/auth";
 import { webhooksApi, authExtApi } from "@/api";
 import { useToast } from "@/composables/useToast";
 import { useI18n } from "@/composables/useI18n";
+import StorageHygieneCard from "@/components/StorageHygieneCard.vue";
 
 const { t } = useI18n();
 const router = useRouter();
@@ -396,6 +402,7 @@ const activeTab = ref<string>("account");
 
 const tabs = computed(() => [
   { id: "account", label: t("settings.tab_account") || "Account & Security" },
+  { id: "storage", label: "Storage & Cache" },
   { id: "webhooks", label: t("settings.tab_webhooks") || "Webhooks" },
   { id: "api", label: t("settings.tab_api") || "API Reference" },
   { id: "shortcuts", label: t("settings.tab_shortcuts") || "Shortcuts" },

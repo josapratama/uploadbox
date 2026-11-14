@@ -56,6 +56,20 @@
           <span class="hidden sm:inline">Edit Image</span>
         </button>
 
+        <button
+          @click="showQrModal = true"
+          class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-700 dark:text-slate-200 bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors shadow-xs flex items-center gap-1.5"
+          title="Scan QR Code on Mobile"
+        >
+          <svg class="w-3.5 h-3.5 text-indigo-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="3" width="7" height="7" />
+            <rect x="14" y="3" width="7" height="7" />
+            <rect x="14" y="14" width="7" height="7" />
+            <rect x="3" y="14" width="7" height="7" />
+          </svg>
+          <span class="hidden sm:inline">QR Code</span>
+        </button>
+
         <a
           :href="file.cdnUrl"
           download
@@ -177,6 +191,61 @@
               <span>{{ isCopied ? 'Copied!' : 'Copy' }}</span>
             </button>
           </div>
+
+          <!-- Signed Expiring URL Generator -->
+          <div class="pt-3 border-t border-slate-100 dark:border-slate-800/80 space-y-2.5">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-semibold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                  <svg class="w-3.5 h-3.5 text-amber-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                  </svg>
+                  <span>Signed Time-Limited Link</span>
+                </span>
+                <span class="px-1.5 py-0.5 rounded text-[10px] font-mono font-semibold bg-amber-500/10 text-amber-500 border border-amber-500/20">
+                  HMAC-SHA256
+                </span>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <select
+                  v-model="signedExpiry"
+                  class="text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2 py-1 text-slate-700 dark:text-slate-300 focus:outline-none"
+                >
+                  <option :value="900">15 Minutes</option>
+                  <option :value="3600">1 Hour</option>
+                  <option :value="86400">24 Hours</option>
+                  <option :value="604800">7 Days</option>
+                </select>
+
+                <button
+                  @click="generateSignedUrl"
+                  :disabled="generatingSigned"
+                  class="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white text-xs font-semibold transition-colors disabled:opacity-50"
+                >
+                  {{ generatingSigned ? "Signing..." : "Generate" }}
+                </button>
+              </div>
+            </div>
+
+            <div v-if="signedResult" class="space-y-1.5 p-2.5 rounded-xl bg-amber-500/5 border border-amber-500/20 text-xs">
+              <div class="flex items-center justify-between text-[11px] text-amber-600 dark:text-amber-400">
+                <span>Expires: {{ new Date(signedResult.expiresAt).toLocaleString() }}</span>
+                <button
+                  @click="copyUrl(signedResult.signedUrl)"
+                  class="font-bold hover:underline"
+                >
+                  Copy Signed URL
+                </button>
+              </div>
+              <input
+                :value="signedResult.signedUrl"
+                readonly
+                class="w-full text-[11px] font-mono px-2 py-1.5 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 select-all"
+              />
+            </div>
+          </div>
         </div>
 
         <!-- Interactive URL Builder / Transformations -->
@@ -233,6 +302,84 @@
               <span class="text-slate-400 block mb-1">Unique Asset ID</span>
               <span class="font-mono text-[11px] text-slate-500 dark:text-slate-400 break-all select-all block bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
                 {{ file.id }}
+              </span>
+            </div>
+
+            <div v-if="file.sha256" class="pt-2">
+              <div class="flex items-center justify-between mb-1">
+                <span class="text-slate-400 flex items-center gap-1">
+                  <span>SHA-256 Checksum</span>
+                  <span class="px-1.5 py-0.5 rounded text-[9px] font-mono font-semibold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">Verified</span>
+                </span>
+                <button
+                  @click="copySha256"
+                  class="text-[11px] text-indigo-500 hover:underline font-semibold"
+                >
+                  {{ shaCopied ? 'Copied!' : 'Copy' }}
+                </button>
+              </div>
+              <span class="font-mono text-[10px] text-slate-500 dark:text-slate-400 break-all select-all block bg-slate-50 dark:bg-slate-800/60 p-2 rounded-xl">
+                {{ file.sha256 }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Camera & EXIF Specs Card -->
+        <div
+          v-if="file.metadata && (file.metadata as any).exif && Object.keys((file.metadata as any).exif).length > 0"
+          class="p-6 rounded-3xl bg-white dark:bg-[#0f172a] border border-slate-200/80 dark:border-slate-800 shadow-xs space-y-4"
+        >
+          <div class="flex items-center justify-between">
+            <h3 class="text-sm font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <svg class="w-4 h-4 text-violet-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z" />
+                <circle cx="12" cy="13" r="4" />
+              </svg>
+              <span>Camera & EXIF Specs</span>
+            </h3>
+            <span class="text-[10px] font-mono font-semibold px-2 py-0.5 rounded-full bg-violet-500/10 text-violet-500 border border-violet-500/20">
+              RAW EXIF
+            </span>
+          </div>
+
+          <div class="space-y-2.5 text-xs divide-y divide-slate-100 dark:divide-slate-800/80">
+            <div v-if="(file.metadata as any).exif.model" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Camera</span>
+              <span class="font-bold text-slate-800 dark:text-white">
+                {{ (file.metadata as any).exif.make ? `${(file.metadata as any).exif.make} ` : '' }}{{ (file.metadata as any).exif.model }}
+              </span>
+            </div>
+            <div v-if="(file.metadata as any).exif.lens" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Lens</span>
+              <span class="font-mono text-slate-800 dark:text-white text-right max-w-[170px] truncate" :title="(file.metadata as any).exif.lens">
+                {{ (file.metadata as any).exif.lens }}
+              </span>
+            </div>
+            <div v-if="(file.metadata as any).exif.fNumber" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Aperture</span>
+              <span class="font-mono font-bold text-slate-800 dark:text-white">f/{{ (file.metadata as any).exif.fNumber }}</span>
+            </div>
+            <div v-if="(file.metadata as any).exif.exposureTime" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Shutter Speed</span>
+              <span class="font-mono text-slate-800 dark:text-white">{{ (file.metadata as any).exif.exposureTime }}</span>
+            </div>
+            <div v-if="(file.metadata as any).exif.iso" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">ISO</span>
+              <span class="font-mono font-bold text-slate-800 dark:text-white">{{ (file.metadata as any).exif.iso }}</span>
+            </div>
+            <div v-if="(file.metadata as any).exif.focalLength" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Focal Length</span>
+              <span class="font-mono text-slate-800 dark:text-white">{{ (file.metadata as any).exif.focalLength }}</span>
+            </div>
+            <div v-if="(file.metadata as any).exif.dateTime" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Captured At</span>
+              <span class="text-slate-600 dark:text-slate-300 font-mono text-[11px]">{{ (file.metadata as any).exif.dateTime }}</span>
+            </div>
+            <div v-if="(file.metadata as any).exif.hasGps" class="pt-2 flex items-center justify-between">
+              <span class="text-slate-400">Location Tag</span>
+              <span class="px-1.5 py-0.5 rounded text-[10px] font-semibold bg-blue-500/10 text-blue-500 border border-blue-500/20">
+                GPS Embedded
               </span>
             </div>
           </div>
@@ -297,6 +444,13 @@
       @close="showEditor = false"
       @saved="onEditorSaved"
     />
+
+    <QrCodeModal
+      :visible="showQrModal"
+      :url="formattedCdnLink || file?.cdnUrl || ''"
+      :filename="file?.originalFilename || ''"
+      @close="showQrModal = false"
+    />
   </div>
 
   <!-- Loading State -->
@@ -313,6 +467,7 @@ import { useToast } from "@/composables/useToast";
 import ConfirmDialog from "@/components/ConfirmDialog.vue";
 import ImageEditor from "@/components/ImageEditor.vue";
 import CdnUrlBuilder from "@/components/CdnUrlBuilder.vue";
+import QrCodeModal from "@/components/QrCodeModal.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -320,6 +475,7 @@ const toast = useToast();
 const file = ref<any>(null);
 const showDeleteConfirm = ref(false);
 const showEditor = ref(false);
+const showQrModal = ref(false);
 const isRenaming = ref(false);
 const newFilename = ref("");
 const renameInput = ref<HTMLInputElement>();
@@ -327,6 +483,36 @@ const shareUrl = ref("");
 const creatingShare = ref(false);
 const cdnFormat = ref<string>("direct");
 const isCopied = ref(false);
+const shaCopied = ref(false);
+const signedExpiry = ref<number>(3600);
+const generatingSigned = ref(false);
+const signedResult = ref<any>(null);
+
+function copySha256() {
+  if (!file.value?.sha256) return;
+  navigator.clipboard.writeText(file.value.sha256);
+  shaCopied.value = true;
+  toast.success("SHA-256 Checksum copied");
+  setTimeout(() => {
+    shaCopied.value = false;
+  }, 2000);
+}
+
+async function generateSignedUrl() {
+  if (!file.value?.id) return;
+  generatingSigned.value = true;
+  try {
+    const { data } = await filesApi.getSignedUrl(file.value.id, {
+      expiresInSeconds: signedExpiry.value,
+    });
+    signedResult.value = data;
+    toast.success("Signed URL generated");
+  } catch {
+    toast.error("Failed to generate signed URL");
+  } finally {
+    generatingSigned.value = false;
+  }
+}
 
 const cdnBase = computed(() => (file.value ? `/cdn/${file.value.id}` : ""));
 

@@ -7,6 +7,8 @@ import { config, getCdnBaseUrl } from "../config";
 import { logActivity } from "./activity";
 import { generateVideoThumbnail } from "../services/video-processor";
 import { dispatchWebhook } from "../services/webhook-dispatcher";
+import { getStorageBreakdown, purgeAllCdnCache } from "../services/cleanup";
+import { computeSignedToken, getProjectSecret } from "../services/signed-url";
 
 export async function fileRoutes(app: FastifyInstance) {
   // List files with pagination and filtering
@@ -118,6 +120,31 @@ export async function fileRoutes(app: FastifyInstance) {
       },
     });
   });
+
+  // Storage hygiene & disk breakdown
+  app.get(
+    "/storage-breakdown",
+    { preHandler: [authenticateAny] },
+    async (request, reply) => {
+      const projectId = (request as any).projectId;
+      const data = await getStorageBreakdown(projectId);
+      return reply.send(data);
+    },
+  );
+
+  // Purge CDN transformations cache
+  app.post(
+    "/purge-cache",
+    { preHandler: [authenticateAny] },
+    async (request, reply) => {
+      const result = await purgeAllCdnCache();
+      return reply.send({
+        success: true,
+        message: `Berhasil mengosongkan ${result.filesRemoved} file varian cache (${result.freedHuman})`,
+        ...result,
+      });
+    },
+  );
 
   // Get single file info
   app.get(
@@ -600,6 +627,56 @@ export async function fileRoutes(app: FastifyInstance) {
       reply.header("Content-Type", "image/jpeg");
       reply.header("Cache-Control", "public, max-age=86400");
       return reply.send(stream);
+    },
+  );
+
+  // Generate Time-Limited Signed CDN URL
+  app.post(
+    "/:id/signed-url",
+    { preHandler: [authenticateAny] },
+    async (request, reply) => {
+      const projectId = (request as any).projectId;
+      const { id } = request.params as { id: string };
+      const { expiresInSeconds = 3600, operations = "" } = (request.body || {}) as {
+        expiresInSeconds?: number;
+        operations?: string;
+      };
+
+      const files = await db
+        .select()
+        .from(schema.files)
+        .where(
+          and(
+            eq(schema.files.id, id),
+            eq(schema.files.projectId, projectId),
+            eq(schema.files.isDeleted, false),
+          ),
+        )
+        .limit(1);
+
+      if (files.length === 0) {
+        return reply.status(404).send({ error: "File not found" });
+      }
+
+      const file = files[0];
+      const validDuration = Math.min(60 * 60 * 24 * 30, Math.max(60, expiresInSeconds));
+      const expires = Math.floor(Date.now() / 1000) + validDuration;
+      const secret = await getProjectSecret(projectId);
+      const token = computeSignedToken(file.id, expires, secret);
+
+      const cdnBase = getCdnBaseUrl(request);
+      const opsSegment = operations ? (operations.startsWith("-/") ? operations : `-/${operations}`) : "";
+      const pathWithSigned = `${cdnBase}/${file.id}${opsSegment ? `/${opsSegment}` : ""}/-/signed/${expires}/${token}/${encodeURIComponent(file.originalFilename)}`;
+      const querySigned = `${cdnBase}/${file.id}${opsSegment ? `/${opsSegment}` : ""}/${encodeURIComponent(file.originalFilename)}?expires=${expires}&token=${token}`;
+
+      return reply.send({
+        fileId: file.id,
+        expires,
+        expiresAt: new Date(expires * 1000).toISOString(),
+        token,
+        signedUrl: pathWithSigned,
+        querySignedUrl: querySigned,
+      });
     },
   );
 

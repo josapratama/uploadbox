@@ -67,6 +67,7 @@ export const files = pgTable(
     folder: varchar("folder", { length: 1024 }).default("/").notNull(),
     version: integer("version").default(1).notNull(),
     parentFileId: uuid("parent_file_id"),
+    sha256: varchar("sha256", { length: 64 }),
     downloadCount: integer("download_count").default(0).notNull(),
     isStored: boolean("is_stored").default(true).notNull(),
     isDeleted: boolean("is_deleted").default(false).notNull(),
@@ -78,6 +79,7 @@ export const files = pgTable(
     mimeTypeIdx: index("files_mime_type_idx").on(table.mimeType),
     uploadedAtIdx: index("files_uploaded_at_idx").on(table.uploadedAt),
     folderIdx: index("files_folder_idx").on(table.folder),
+    sha256Idx: index("files_sha256_idx").on(table.sha256),
   }),
 );
 

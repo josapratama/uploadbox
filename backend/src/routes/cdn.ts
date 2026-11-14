@@ -1,4 +1,4 @@
-import { FastifyInstance } from "fastify";
+import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
 import { db, schema } from "../db";
 import { eq, and } from "drizzle-orm";
 import fs from "fs";
@@ -9,16 +9,78 @@ import {
 } from "../services/image-processor";
 import { fileExists } from "../services/storage";
 import { generateVideoThumbnail } from "../services/video-processor";
+import { verifySignedToken } from "../services/signed-url";
+
+/**
+ * Streams file with full RFC 7233 HTTP Range support (HTTP 206 Partial Content)
+ * Enables seekable video/audio scrubbing and resumable downloads.
+ */
+async function sendFileWithRange(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  filePath: string,
+  mimeType: string,
+  filename: string,
+  cacheControl = "public, max-age=31536000, immutable",
+  etag?: string,
+) {
+  const stats = await fs.promises.stat(filePath);
+  const fileSize = stats.size;
+  const range = request.headers.range;
+
+  reply.header("Access-Control-Allow-Origin", "*");
+  reply.header("Accept-Ranges", "bytes");
+  reply.header(
+    "Content-Disposition",
+    `inline; filename="${encodeURIComponent(filename)}"`,
+  );
+  if (etag) reply.header("ETag", etag);
+
+  if (range) {
+    const parts = range.replace(/bytes=/, "").split("-");
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+    if (
+      isNaN(start) ||
+      isNaN(end) ||
+      start >= fileSize ||
+      end >= fileSize ||
+      start > end
+    ) {
+      reply.header("Content-Range", `bytes */${fileSize}`);
+      return reply.status(416).send({ error: "Requested Range Not Satisfiable" });
+    }
+
+    const chunkSize = end - start + 1;
+    const stream = fs.createReadStream(filePath, { start, end });
+
+    reply.status(206);
+    reply.header("Content-Range", `bytes ${start}-${end}/${fileSize}`);
+    reply.header("Content-Length", chunkSize);
+    reply.header("Content-Type", mimeType);
+    reply.header("Cache-Control", "no-cache");
+    return reply.send(stream);
+  }
+
+  reply.header("Content-Type", mimeType);
+  reply.header("Content-Length", fileSize);
+  reply.header("Cache-Control", cacheControl);
+  const stream = fs.createReadStream(filePath);
+  return reply.send(stream);
+}
 
 export async function cdnRoutes(app: FastifyInstance) {
-  // Single unified route that handles all CDN patterns:
-  // /cdn/:uuid/:filename
-  // /cdn/:uuid/-/operation/params/.../:filename
+  // Unified CDN route handling:
+  // - Original file: /cdn/:uuid/:filename
+  // - Image transforms: /cdn/:uuid/-/resize/400x400/:filename
+  // - Signed URLs: /cdn/:uuid/-/signed/:expires/:token/.../:filename OR ?token=...&expires=...
   app.get("/:uuid/*", async (request, reply) => {
     const { uuid } = request.params as { uuid: string };
-    const wildcard = (request.params as any)["*"] as string;
+    let wildcard = (request.params as any)["*"] as string;
+    const query = (request.query || {}) as { token?: string; expires?: string };
 
-    // Find file in database
+    // 1. Find file in database
     const files = await db
       .select()
       .from(schema.files)
@@ -31,40 +93,68 @@ export async function cdnRoutes(app: FastifyInstance) {
 
     const file = files[0];
 
-    // Check if file exists on disk
+    // 2. Check if file exists on disk
     if (!fileExists(file.storagePath)) {
       return reply.status(404).send({ error: "File not found on storage" });
     }
 
-    // Detect if this is a preview request
+    // 3. Handle Time-Limited Signed URL Verification
+    let signedExpires: number | null = null;
+    let signedToken: string | null = null;
+
+    // Check path-based signed pattern: -/signed/:expires/:token/
+    const signedMatch = wildcard.match(/-\/signed\/(\d+)\/([a-f0-9]{32,64})\/?/i);
+    if (signedMatch) {
+      signedExpires = parseInt(signedMatch[1], 10);
+      signedToken = signedMatch[2];
+      // Strip -/signed/:expires/:token/ from wildcard so subsequent transforms continue
+      wildcard = wildcard.replace(signedMatch[0], "");
+      if (wildcard.startsWith("-//")) wildcard = wildcard.substring(2);
+    } else if (query.token && query.expires) {
+      signedExpires = parseInt(query.expires, 10);
+      signedToken = query.token;
+    }
+
+    if (signedExpires && signedToken) {
+      const verifyRes = await verifySignedToken(
+        file.id,
+        file.projectId,
+        signedExpires,
+        signedToken,
+      );
+      if (!verifyRes.valid) {
+        return reply.status(403).send({ error: verifyRes.reason || "Forbidden" });
+      }
+    }
+
+    // 4. Detect if this is a preview request
     const isPreview = wildcard.startsWith("-/preview");
 
-    // Parse operations from URL
+    // 5. Parse operations from URL
     const hasOperations = wildcard.includes("-/");
 
     if (!hasOperations || (!file.isImage && !file.isVideo)) {
-      // Serve original file
-      const stats = await fs.promises.stat(file.storagePath);
-      const stream = fs.createReadStream(file.storagePath);
+      // Serve original file with Range support
       const mimeType =
         file.mimeType ||
         mime.lookup(file.originalFilename) ||
         "application/octet-stream";
 
-      reply.header("Content-Type", mimeType);
-      reply.header("Content-Length", stats.size);
-      reply.header(
-        "Content-Disposition",
-        `inline; filename="${encodeURIComponent(file.originalFilename)}"`,
-      );
-      reply.header("Cache-Control", "public, max-age=31536000, immutable");
-      reply.header("ETag", `"${file.id}-${stats.mtimeMs}"`);
-      reply.header("Access-Control-Allow-Origin", "*");
+      const stats = await fs.promises.stat(file.storagePath);
+      const etag = `"${file.id}-${stats.mtimeMs}"`;
 
-      return reply.send(stream);
+      return sendFileWithRange(
+        request,
+        reply,
+        file.storagePath,
+        mimeType,
+        file.originalFilename,
+        "public, max-age=31536000, immutable",
+        etag,
+      );
     }
 
-    // Process image/video operations
+    // 6. Process image/video operations
     try {
       // Video preview - serve thumbnail
       if (file.isVideo && isPreview) {
@@ -73,20 +163,23 @@ export async function cdnRoutes(app: FastifyInstance) {
           file.id,
         );
         if (thumbPath && fileExists(thumbPath)) {
-          const stats = await fs.promises.stat(thumbPath);
-          const stream = fs.createReadStream(thumbPath);
-          reply.header("Content-Type", "image/jpeg");
-          reply.header("Content-Length", stats.size);
-          reply.header("Cache-Control", "public, max-age=31536000, immutable");
-          reply.header("Access-Control-Allow-Origin", "*");
-          return reply.send(stream);
+          return sendFileWithRange(
+            request,
+            reply,
+            thumbPath,
+            "image/jpeg",
+            `${file.originalFilename}-thumb.jpg`,
+            "public, max-age=31536000, immutable",
+          );
         }
         // Fallback: serve original video
-        const stats = await fs.promises.stat(file.storagePath);
-        const stream = fs.createReadStream(file.storagePath);
-        reply.header("Content-Type", file.mimeType);
-        reply.header("Content-Length", stats.size);
-        return reply.send(stream);
+        return sendFileWithRange(
+          request,
+          reply,
+          file.storagePath,
+          file.mimeType,
+          file.originalFilename,
+        );
       }
 
       // Image operations
@@ -102,7 +195,6 @@ export async function cdnRoutes(app: FastifyInstance) {
         };
         operationsKey = "preview-400-webp";
       } else {
-        // Extract operations string (everything before the last segment which is filename)
         const operationsStr =
           wildcard.substring(0, wildcard.lastIndexOf("/")) || wildcard;
         operations = parseOperationsFromUrl(operationsStr);
@@ -116,28 +208,28 @@ export async function cdnRoutes(app: FastifyInstance) {
         operationsKey,
       );
 
-      const stats = await fs.promises.stat(result.path);
-      const stream = fs.createReadStream(result.path);
+      const etag = `"${file.id}-${Buffer.from(operationsKey).toString("base64url")}"`;
 
-      reply.header("Content-Type", result.mimeType);
-      reply.header("Content-Length", stats.size);
-      reply.header("Cache-Control", "public, max-age=31536000, immutable");
-      reply.header(
-        "ETag",
-        `"${file.id}-${Buffer.from(operationsKey).toString("base64url")}"`,
+      return sendFileWithRange(
+        request,
+        reply,
+        result.path,
+        result.mimeType,
+        file.originalFilename,
+        "public, max-age=31536000, immutable",
+        etag,
       );
-      reply.header("Access-Control-Allow-Origin", "*");
-
-      return reply.send(stream);
     } catch (err: any) {
       app.log.error(err, "Image processing failed");
       // Fallback to original
-      const stats = await fs.promises.stat(file.storagePath);
-      const stream = fs.createReadStream(file.storagePath);
-      reply.header("Content-Type", file.mimeType);
-      reply.header("Content-Length", stats.size);
-      reply.header("Cache-Control", "public, max-age=3600");
-      return reply.send(stream);
+      return sendFileWithRange(
+        request,
+        reply,
+        file.storagePath,
+        file.mimeType,
+        file.originalFilename,
+        "public, max-age=3600",
+      );
     }
   });
 }
